@@ -1,0 +1,471 @@
+// 치과 임플란트 중계 플랫폼 - Prisma Schema
+// Spring Boot + JPA + MariaDB → Next.js + Prisma + PostgreSQL 마이그레이션
+// 기존 dental-backend 의 14개 도메인 엔티티를 1:1 매핑
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// ============================================================
+// Enums
+// ============================================================
+
+enum UserRole {
+  PATIENT
+  DENTIST
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum QuotationRequestStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  EXPIRED
+}
+
+enum QuotationStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PriceRange {
+  LOW
+  MEDIUM
+  HIGH
+  PREMIUM
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum HospitalType {
+  CLINIC
+  HOSPITAL
+  UNIVERSITY
+}
+
+// ============================================================
+// Auth.js (next-auth v5) 모델
+// PrismaAdapter 요구사항 — User 와 1:N
+// ============================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================
+// 도메인 모델
+// ============================================================
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  password      String? // OAuth 사용자는 null
+  name          String     @db.VarChar(100)
+  phoneNumber   String?    @unique @map("phone_number") @db.VarChar(20)
+  role          UserRole
+  status        UserStatus @default(ACTIVE)
+  emailVerified DateTime?  @map("email_verified")
+  image         String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  patient                Patient?
+  dentist                Dentist?
+  accounts               Account[]
+  sessions               Session[]
+  quotationStatusChanges QuotationStatusHistory[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Patient {
+  id            String    @id // User 와 1:1 shared PK
+  birthDate     DateTime? @map("birth_date") @db.Date
+  gender        Gender?
+  sido          String?   @db.VarChar(50)
+  sigungu       String?   @db.VarChar(50)
+  dong          String?   @db.VarChar(50)
+  detailAddress String?   @map("detail_address")
+  zipCode       String?   @map("zip_code") @db.VarChar(10)
+  latitude      Decimal?  @db.Decimal(10, 8)
+  longitude     Decimal?  @db.Decimal(11, 8)
+  hasInsurance  Boolean   @default(false) @map("has_insurance")
+  insuranceType String?   @map("insurance_type") @db.VarChar(50)
+
+  user              User               @relation(fields: [id], references: [id], onDelete: Cascade)
+  quotationRequests QuotationRequest[]
+  consultations     Consultation[]
+  reviews           Review[]
+
+  @@map("patients")
+}
+
+model Dentist {
+  id                String  @id // User 와 1:1 shared PK
+  clinicId          String? @map("clinic_id")
+  licenseNumber     String  @unique @map("license_number") @db.VarChar(50)
+  specialization    String  @db.VarChar(100)
+  yearsOfExperience Int?    @map("years_of_experience")
+  education         String?
+  introduction      String? @db.Text
+  isVerified        Boolean @default(false) @map("is_verified")
+
+  user          User           @relation(fields: [id], references: [id], onDelete: Cascade)
+  clinic        Clinic?        @relation(fields: [clinicId], references: [id])
+  quotations    Quotation[]
+  consultations Consultation[]
+  reviews       Review[]
+
+  @@map("dentists")
+}
+
+model Clinic {
+  id             String      @id @default(cuid())
+  name           String
+  businessNumber String      @unique @map("business_number") @db.VarChar(20)
+  phoneNumber    String?     @map("phone_number") @db.VarChar(20)
+  description    String?     @db.Text
+  sido           String?     @db.VarChar(50)
+  sigungu        String?     @db.VarChar(50)
+  dong           String?     @db.VarChar(50)
+  detailAddress  String?     @map("detail_address")
+  zipCode        String?     @map("zip_code") @db.VarChar(10)
+  latitude       Decimal?    @db.Decimal(10, 8)
+  longitude      Decimal?    @db.Decimal(11, 8)
+  rating         Decimal     @default(0) @db.Decimal(2, 1)
+  reviewCount    Int         @default(0) @map("review_count")
+  isPremium      Boolean     @default(false) @map("is_premium")
+  hasParking     Boolean     @default(false) @map("has_parking")
+  priceRange     PriceRange? @map("price_range")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  dentists      Dentist[]
+  businessHours ClinicBusinessHours[]
+  photos        ClinicPhoto[]
+  implantBrands ClinicImplantBrand[]
+  quotations    Quotation[]
+  consultations Consultation[]
+  reviews       Review[]
+
+  @@index([latitude, longitude])
+  @@index([isPremium])
+  @@map("clinics")
+}
+
+model ClinicBusinessHours {
+  id         String    @id @default(cuid())
+  clinicId   String    @map("clinic_id")
+  dayOfWeek  DayOfWeek @map("day_of_week")
+  openTime   String?   @map("open_time") @db.VarChar(5)
+  closeTime  String?   @map("close_time") @db.VarChar(5)
+  breakStart String?   @map("break_start") @db.VarChar(5)
+  breakEnd   String?   @map("break_end") @db.VarChar(5)
+  isClosed   Boolean   @default(false) @map("is_closed")
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@unique([clinicId, dayOfWeek])
+  @@map("clinic_business_hours")
+}
+
+model ClinicPhoto {
+  id           String @id @default(cuid())
+  clinicId     String @map("clinic_id")
+  url          String
+  displayOrder Int    @default(0) @map("display_order")
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@map("clinic_photos")
+}
+
+// JPA @ElementCollection → 별도 테이블
+model ClinicImplantBrand {
+  clinicId  String @map("clinic_id")
+  brandName String @map("brand_name") @db.VarChar(50)
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@id([clinicId, brandName])
+  @@map("clinic_implant_brands")
+}
+
+model QuotationRequest {
+  id                    String                 @id @default(cuid())
+  patientId             String                 @map("patient_id")
+  symptoms              String?                @db.Text
+  previousTreatment     String?                @map("previous_treatment") @db.Text
+  urgency               Urgency
+  minBudget             BigInt?                @map("min_budget")
+  maxBudget             BigInt?                @map("max_budget")
+  preferredImplantBrand String?                @map("preferred_implant_brand") @db.VarChar(50)
+  preferredHospitalType String?                @map("preferred_hospital_type") @db.VarChar(50)
+  additionalNotes       String?                @map("additional_notes") @db.Text
+  status                QuotationRequestStatus @default(OPEN)
+  expiresAt             DateTime?              @map("expires_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  patient      Patient                        @relation(fields: [patientId], references: [id])
+  quotations   Quotation[]
+  missingTeeth QuotationRequestMissingTooth[]
+  photos       QuotationRequestPhoto[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("quotation_requests")
+}
+
+model QuotationRequestMissingTooth {
+  requestId   String @map("quotation_request_id")
+  toothNumber String @map("tooth_number")
+
+  request QuotationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@id([requestId, toothNumber])
+  @@map("quotation_request_missing_teeth")
+}
+
+model QuotationRequestPhoto {
+  id           String @id @default(cuid())
+  requestId    String @map("quotation_request_id")
+  photoUrl     String @map("photo_url")
+  displayOrder Int    @default(0) @map("display_order")
+
+  request QuotationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_request_photos")
+}
+
+model Quotation {
+  id                    String          @id @default(cuid())
+  quotationRequestId    String          @map("quotation_request_id")
+  dentistId             String          @map("dentist_id")
+  clinicId              String          @map("clinic_id")
+  treatmentPlan         String          @map("treatment_plan") @db.Text
+  implantTotalAmount    BigInt          @default(0) @map("implant_total_amount")
+  additionalTotalAmount BigInt          @default(0) @map("additional_total_amount")
+  totalAmount           BigInt          @map("total_amount")
+  discountRate          Int             @default(0) @map("discount_rate")
+  discountAmount        BigInt          @default(0) @map("discount_amount")
+  finalAmount           BigInt          @map("final_amount")
+  treatmentDuration     Int             @map("treatment_duration") // 개월
+  warrantyPeriod        Int             @map("warranty_period") // 년
+  additionalNotes       String?         @map("additional_notes") @db.Text
+  validUntil            DateTime        @map("valid_until") @db.Date
+  status                QuotationStatus @default(PENDING)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  request               QuotationRequest                @relation(fields: [quotationRequestId], references: [id])
+  dentist               Dentist                         @relation(fields: [dentistId], references: [id])
+  clinic                Clinic                          @relation(fields: [clinicId], references: [id])
+  implantItems          QuotationImplantItem[]
+  additionalItems       QuotationAdditionalItem[]
+  consultationSchedules QuotationConsultationSchedule[]
+  statusHistories       QuotationStatusHistory[]
+  consultations         Consultation[]
+  reviews               Review[]
+
+  @@unique([quotationRequestId, dentistId], name: "uk_request_dentist")
+  @@index([quotationRequestId])
+  @@index([dentistId])
+  @@index([clinicId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("quotations")
+}
+
+model QuotationImplantItem {
+  id           String @id @default(cuid())
+  quotationId  String @map("quotation_id")
+  toothNumber  String @map("tooth_number") @db.VarChar(10)
+  brand        String @db.VarChar(50)
+  quantity     Int    @default(1)
+  unitPrice    BigInt @map("unit_price")
+  subtotal     BigInt
+  displayOrder Int    @default(0) @map("display_order")
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_implant_items")
+}
+
+model QuotationAdditionalItem {
+  id           String @id @default(cuid())
+  quotationId  String @map("quotation_id")
+  description  String @db.Text
+  price        BigInt
+  displayOrder Int    @default(0) @map("display_order")
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_additional_items")
+}
+
+model QuotationConsultationSchedule {
+  id               String   @id @default(cuid())
+  quotationId      String   @map("quotation_id")
+  consultationDate DateTime @map("consultation_date") @db.Date
+  consultationTime String   @map("consultation_time") @db.VarChar(5)
+  duration         Int      @default(60) // 분
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_consultation_schedules")
+}
+
+model QuotationStatusHistory {
+  id           String           @id @default(cuid())
+  quotationId  String           @map("quotation_id")
+  oldStatus    QuotationStatus? @map("old_status")
+  newStatus    QuotationStatus  @map("new_status")
+  changedById  String?          @map("changed_by_id")
+  changeReason String?          @map("change_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  changedBy User?     @relation(fields: [changedById], references: [id])
+
+  @@index([quotationId])
+  @@map("quotation_status_histories")
+}
+
+model Consultation {
+  id          String             @id @default(cuid())
+  patientId   String             @map("patient_id")
+  dentistId   String             @map("dentist_id")
+  clinicId    String             @map("clinic_id")
+  quotationId String?            @map("quotation_id")
+  scheduledAt DateTime           @map("scheduled_at")
+  duration    Int                @default(60)
+  status      ConsultationStatus @default(SCHEDULED)
+  notes       String?            @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  patient   Patient    @relation(fields: [patientId], references: [id])
+  dentist   Dentist    @relation(fields: [dentistId], references: [id])
+  clinic    Clinic     @relation(fields: [clinicId], references: [id])
+  quotation Quotation? @relation(fields: [quotationId], references: [id])
+
+  @@index([patientId])
+  @@index([dentistId])
+  @@index([scheduledAt])
+  @@map("consultations")
+}
+
+model Review {
+  id          String  @id @default(cuid())
+  patientId   String  @map("patient_id")
+  dentistId   String  @map("dentist_id")
+  clinicId    String  @map("clinic_id")
+  quotationId String? @map("quotation_id")
+  rating      Int // 1-5
+  comment     String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  patient   Patient    @relation(fields: [patientId], references: [id])
+  dentist   Dentist    @relation(fields: [dentistId], references: [id])
+  clinic    Clinic     @relation(fields: [clinicId], references: [id])
+  quotation Quotation? @relation(fields: [quotationId], references: [id])
+
+  @@index([dentistId])
+  @@index([clinicId])
+  @@map("reviews")
+}
