@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 const DAY_LABEL: Record<string, string> = {
   MONDAY: "월",
