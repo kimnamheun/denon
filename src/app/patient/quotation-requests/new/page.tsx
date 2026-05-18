@@ -9,13 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ToggleGroup } from "@/components/ui/toggle-group";
 import { ToothSelector } from "@/components/tooth-selector";
 import { uploadFile } from "@/lib/upload";
 
@@ -195,16 +189,16 @@ export default function NewQuotationRequestPage() {
           <CardContent className="space-y-4">
             <div>
               <Label>긴급도 *</Label>
-              <Select value={urgency} onValueChange={(v) => setUrgency(v as Urgency)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LOW">여유롭게 (1개월 이상)</SelectItem>
-                  <SelectItem value="MEDIUM">보통 (2주 이내)</SelectItem>
-                  <SelectItem value="HIGH">시급 (1주 이내)</SelectItem>
-                </SelectContent>
-              </Select>
+              <ToggleGroup<Urgency>
+                className="mt-2"
+                options={[
+                  { value: "LOW", label: "여유 (1개월 이상)" },
+                  { value: "MEDIUM", label: "보통 (2주 이내)" },
+                  { value: "HIGH", label: "시급 (1주 이내)" },
+                ]}
+                value={urgency}
+                onChange={(v) => v && setUrgency(v)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

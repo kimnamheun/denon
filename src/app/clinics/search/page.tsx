@@ -7,13 +7,7 @@ import { useNaverMap } from "@/hooks/useNaverMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ToggleGroup } from "@/components/ui/toggle-group";
 
 interface Clinic {
   id: string;
@@ -110,12 +104,6 @@ export default function ClinicSearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
-  function toggleBrand(brand: string) {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
-    );
-  }
-
   return (
     <main className="container max-w-6xl py-6">
       <div className="mb-4">
@@ -124,8 +112,8 @@ export default function ClinicSearchPage() {
       </div>
 
       <Card className="mb-4">
-        <CardContent className="p-4 space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-wrap gap-3 items-end">
             <div>
               <label className="text-xs text-muted-foreground">반경 (km)</label>
               <Input
@@ -134,92 +122,88 @@ export default function ClinicSearchPage() {
                 max={50}
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
+                className="w-24"
               />
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground">최소 평점</label>
-              <Select value={String(minRating)} onValueChange={(v) => setMinRating(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">전체</SelectItem>
-                  <SelectItem value="3">3점 이상</SelectItem>
-                  <SelectItem value="4">4점 이상</SelectItem>
-                  <SelectItem value="4.5">4.5점 이상</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">가격대</label>
-              <Select value={priceRange || "ALL"} onValueChange={(v) => setPriceRange(v === "ALL" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">전체</SelectItem>
-                  <SelectItem value="LOW">저가형</SelectItem>
-                  <SelectItem value="MEDIUM">중가형</SelectItem>
-                  <SelectItem value="HIGH">고가형</SelectItem>
-                  <SelectItem value="PREMIUM">프리미엄</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">정렬</label>
-              <Select
-                value={sortBy}
-                onValueChange={(v) => setSortBy(v as "distance" | "rating" | "reviews")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="distance">가까운 순</SelectItem>
-                  <SelectItem value="rating">평점 높은 순</SelectItem>
-                  <SelectItem value="reviews">리뷰 많은 순</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <Button onClick={search} disabled={loading} className="w-full">
-                {loading ? "검색 중..." : "검색"}
-              </Button>
-            </div>
+            <Button onClick={search} disabled={loading} className="ml-auto">
+              {loading ? "검색 중..." : "검색"}
+            </Button>
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs text-muted-foreground mr-1">브랜드:</span>
-            {POPULAR_BRANDS.map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => toggleBrand(b)}
-                className={`text-xs px-3 py-1 rounded-full border ${
-                  selectedBrands.includes(b)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background hover:bg-muted"
-                }`}
-              >
-                {b}
-              </button>
-            ))}
-            <label className="flex items-center gap-1 text-xs ml-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={premiumOnly}
-                onChange={(e) => setPremiumOnly(e.target.checked)}
-              />
-              프리미엄만
-            </label>
-            <label className="flex items-center gap-1 text-xs cursor-pointer">
-              <input
-                type="checkbox"
-                checked={parkingOnly}
-                onChange={(e) => setParkingOnly(e.target.checked)}
-              />
-              주차 가능
-            </label>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">최소 평점</label>
+            <ToggleGroup
+              size="sm"
+              options={[
+                { value: "0", label: "전체" },
+                { value: "3", label: "3점 이상" },
+                { value: "4", label: "4점 이상" },
+                { value: "4.5", label: "4.5점 이상" },
+              ]}
+              value={String(minRating)}
+              onChange={(v) => v && setMinRating(Number(v))}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">가격대</label>
+            <ToggleGroup
+              size="sm"
+              clearable
+              options={[
+                { value: "LOW", label: "저가형" },
+                { value: "MEDIUM", label: "중가형" },
+                { value: "HIGH", label: "고가형" },
+                { value: "PREMIUM", label: "프리미엄" },
+              ]}
+              value={priceRange || null}
+              onChange={(v) => setPriceRange(v ?? "")}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">정렬</label>
+            <ToggleGroup<"distance" | "rating" | "reviews">
+              size="sm"
+              options={[
+                { value: "distance", label: "가까운 순" },
+                { value: "rating", label: "평점 높은 순" },
+                { value: "reviews", label: "리뷰 많은 순" },
+              ]}
+              value={sortBy}
+              onChange={(v) => v && setSortBy(v)}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">임플란트 브랜드 (다중 선택)</label>
+            <ToggleGroup
+              size="sm"
+              multi
+              options={POPULAR_BRANDS.map((b) => ({ value: b, label: b }))}
+              value={selectedBrands}
+              onChange={setSelectedBrands}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1.5">옵션</label>
+            <ToggleGroup
+              size="sm"
+              multi
+              options={[
+                { value: "premium", label: "프리미엄만" },
+                { value: "parking", label: "주차 가능" },
+              ]}
+              value={[
+                ...(premiumOnly ? ["premium"] : []),
+                ...(parkingOnly ? ["parking"] : []),
+              ]}
+              onChange={(arr) => {
+                setPremiumOnly(arr.includes("premium"));
+                setParkingOnly(arr.includes("parking"));
+              }}
+            />
           </div>
         </CardContent>
       </Card>

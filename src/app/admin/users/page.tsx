@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserRow } from "./user-row";
+import { FilterForm } from "./filter-form";
 
 interface SearchParams {
   q?: string;
@@ -62,40 +63,7 @@ export default async function AdminUsersPage({
         <p className="text-muted-foreground mt-1">총 {total.toLocaleString()}명</p>
       </div>
 
-      <form className="flex gap-2 flex-wrap" method="get">
-        <input
-          name="q"
-          defaultValue={searchParams.q}
-          placeholder="이름 또는 이메일"
-          className="flex h-10 w-64 rounded-md border border-input bg-background px-3 text-sm"
-        />
-        <select
-          name="role"
-          defaultValue={searchParams.role}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-        >
-          <option value="">전체 역할</option>
-          <option value="PATIENT">환자</option>
-          <option value="DENTIST">치과의사</option>
-          <option value="ADMIN">관리자</option>
-        </select>
-        <select
-          name="status"
-          defaultValue={searchParams.status}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-        >
-          <option value="">전체 상태</option>
-          <option value="ACTIVE">활성</option>
-          <option value="INACTIVE">비활성</option>
-          <option value="SUSPENDED">정지</option>
-        </select>
-        <button
-          type="submit"
-          className="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium"
-        >
-          검색
-        </button>
-      </form>
+      <FilterForm />
 
       <Card>
         <CardContent className="p-0">
