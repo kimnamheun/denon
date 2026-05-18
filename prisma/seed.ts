@@ -3,6 +3,7 @@
 //
 // 멱등성: upsert 사용 → 여러 번 실행해도 안전
 
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
