@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+export default function NewQuotationPage() {
+  return (
+    <Suspense fallback={<main className="container py-10">Loading...</main>}>
+      <NewQuotationForm />
+    </Suspense>
+  );
+}
 
 interface ImplantItem {
   toothNumber: string;
@@ -28,7 +36,7 @@ interface RequestData {
   symptoms?: string | null;
 }
 
-export default function NewQuotationPage() {
+function NewQuotationForm() {
   const router = useRouter();
   const params = useSearchParams();
   const requestId = params.get("requestId");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Star } from "lucide-react";
 
@@ -9,6 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+
+export default function NewReviewPage() {
+  return (
+    <Suspense fallback={<main className="container py-10">Loading...</main>}>
+      <ReviewForm />
+    </Suspense>
+  );
+}
 
 interface ConsultationData {
   id: string;
@@ -20,7 +28,7 @@ interface ConsultationData {
   dentist: { user: { name: string } };
 }
 
-export default function NewReviewPage() {
+function ReviewForm() {
   const router = useRouter();
   const params = useSearchParams();
   const consultationId = params.get("consultationId");

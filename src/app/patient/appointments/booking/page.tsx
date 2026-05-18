@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,14 @@ const TIME_SLOTS = Array.from({ length: 19 }, (_, i) => {
 });
 
 export default function AppointmentBookingPage() {
+  return (
+    <Suspense fallback={<main className="container py-10">Loading...</main>}>
+      <BookingForm />
+    </Suspense>
+  );
+}
+
+function BookingForm() {
   const router = useRouter();
   const params = useSearchParams();
 
