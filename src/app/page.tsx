@@ -12,6 +12,8 @@ import { CategoryGrid } from "@/components/home/category-grid";
 import { PatientHero } from "@/components/home/patient-hero";
 import { DentistHero } from "@/components/home/dentist-hero";
 import { AdminHero } from "@/components/home/admin-hero";
+import { RegionalClinics } from "@/components/home/regional-clinics";
+import { PatientTimeline } from "@/components/home/patient-timeline";
 
 export const revalidate = 60;
 
@@ -37,8 +39,14 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ===== 환자 활동 타임라인 ===== */}
+      {role === "PATIENT" && user && <PatientTimeline userId={user.id} />}
+
       {/* ===== 인기 치과 ===== */}
       <PopularClinicsSection />
+
+      {/* ===== 지역별 인기 치과 (비로그인/환자) ===== */}
+      {(role === "PATIENT" || !role) && <RegionalClinics />}
 
       {/* ===== 최근 리뷰 (비로그인/환자 우선) ===== */}
       {(role === "PATIENT" || !role) && <RecentReviewsSection />}

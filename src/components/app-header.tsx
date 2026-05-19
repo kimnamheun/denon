@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function AppHeader() {
   const { data: session, status } = useSession();
@@ -59,6 +60,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {session?.user && <NotificationBell />}
           {status === "loading" ? null : session?.user ? (
             <>
               <span className="text-sm text-muted-foreground hidden sm:inline">
