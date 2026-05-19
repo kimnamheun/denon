@@ -7,6 +7,8 @@ import { auth } from "@/auth";
 const PUBLIC_PATHS = [
   "/",
   "/about",
+  "/terms",
+  "/privacy",
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
