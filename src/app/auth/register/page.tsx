@@ -20,15 +20,30 @@ export default function RegisterPage() {
     licenseNumber: "",
     specialization: "",
   });
+  const [consents, setConsents] = useState({
+    terms: false,
+    privacy: false,
+    medicalDisclosure: false, // 환자 전용 — 견적 요청 익명화 공개 동의
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
+  const requiredConsents = role === "PATIENT"
+    ? consents.terms && consents.privacy && consents.medicalDisclosure
+    : consents.terms && consents.privacy;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!requiredConsents) {
+      setError("필수 약관에 모두 동의해주세요.");
+      return;
+    }
+
     setLoading(true);
 
     const payload: Record<string, unknown> = {
@@ -102,11 +117,68 @@ export default function RegisterPage() {
             </>
           )}
 
+          {/* 약관 동의 */}
+          <div className="border rounded-md p-3 space-y-2 bg-muted/30">
+            <p className="text-sm font-medium">약관 동의 (필수)</p>
+
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={consents.terms}
+                onChange={(e) => setConsents((p) => ({ ...p, terms: e.target.checked }))}
+              />
+              <span className="flex-1">
+                [필수]{" "}
+                <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                  이용약관
+                </Link>
+                에 동의합니다
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={consents.privacy}
+                onChange={(e) => setConsents((p) => ({ ...p, privacy: e.target.checked }))}
+              />
+              <span className="flex-1">
+                [필수]{" "}
+                <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                  개인정보처리방침
+                </Link>
+                에 동의합니다 (민감정보 의료기록 포함)
+              </span>
+            </label>
+
+            {role === "PATIENT" && (
+              <label className="flex items-start gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={consents.medicalDisclosure}
+                  onChange={(e) => setConsents((p) => ({ ...p, medicalDisclosure: e.target.checked }))}
+                />
+                <span className="flex-1">
+                  [필수] 견적 요청 정보(치아 위치, 증상, 사진)가 <strong>익명화되어</strong>{" "}
+                  제휴 의료기관에 공개되어 견적 회신을 받는 것에 동의합니다
+                </span>
+              </label>
+            )}
+
+            <p className="text-[11px] text-muted-foreground pt-1 border-t">
+              본 플랫폼은 의료기관·의료인과 별개의 정보 제공 서비스이며,
+              의료법 제27조에서 금지하는 환자 알선·유인 행위를 수행하지 않습니다.
+            </p>
+          </div>
+
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button type="submit" disabled={loading || !requiredConsents} className="w-full">
             {loading ? "가입 중..." : "회원가입"}
           </Button>
         </form>

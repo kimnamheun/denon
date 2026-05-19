@@ -87,7 +87,7 @@ export function RegionalClinics() {
                     <h3 className="font-semibold line-clamp-1">{c.name}</h3>
                     {c.isPremium && (
                       <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">
-                        프리미엄
+                        광고
                       </span>
                     )}
                   </div>

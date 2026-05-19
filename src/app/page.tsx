@@ -157,9 +157,9 @@ async function PopularClinicsSection() {
         <div className="flex items-end justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <Star className="h-5 w-5" /> 추천 치과
+              <Star className="h-5 w-5" /> 리뷰 상위 치과
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">평점이 높은 인증 병원</p>
+            <p className="text-sm text-muted-foreground mt-0.5">환자 평점·리뷰 수 기준 정렬</p>
           </div>
           <Link href="/clinics/search" className="text-sm text-blue-600 hover:underline whitespace-nowrap">
             전체보기 →
@@ -175,7 +175,7 @@ async function PopularClinicsSection() {
                     <h3 className="font-semibold line-clamp-1">{c.name}</h3>
                     {c.isPremium && (
                       <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">
-                        프리미엄
+                        광고
                       </span>
                     )}
                   </div>
@@ -272,11 +272,12 @@ async function RecentReviewsSection() {
 // 실시간 견적 요청 (의사용 핵심, 비로그인 활동 증명)
 // ============================================================
 async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
+  // 의사용: 응답에 필요한 정보 포함 (환자명 마스킹, 증상 일부)
+  // 비로그인용: 활동 증명만 — 환자명/증상 완전 제거, 치아 수와 긴급도만
   const requests = await prisma.quotationRequest.findMany({
     where: { status: "OPEN", deletedAt: null },
     include: {
-      missingTeeth: true,
-      patient: { include: { user: { select: { name: true } } } },
+      missingTeeth: { select: { toothNumber: true } },
       _count: { select: { quotations: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -295,9 +296,9 @@ async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
       <div className="container max-w-5xl py-8">
         <div className="flex items-end justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold">실시간 견적 요청</h2>
+            <h2 className="text-xl font-bold">실시간 활동 현황</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              방금 올라온 환자분들의 요청
+              플랫폼에서 진행 중인 견적 요청 건수
             </p>
           </div>
           {isDentist && (
@@ -316,20 +317,17 @@ async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
             const cardContent = (
               <Card className="hover:shadow-md transition-shadow h-full">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="text-sm font-medium">
-                      {maskName(r.patient.user.name)} 님 · 치아 {r.missingTeeth.length}개
+                      임플란트 견적 요청 (치아 {r.missingTeeth.length}개)
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${urg.className}`}>
                       {urg.label}
                     </span>
                   </div>
-                  <p className="text-xs line-clamp-2 text-foreground/70 min-h-[2.5rem]">
-                    {r.symptoms ?? "(증상 미입력)"}
-                  </p>
-                  <div className="mt-3 pt-3 border-t flex justify-between items-center text-xs text-muted-foreground">
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
                     <span>{timeAgo(r.createdAt)}</span>
-                    <span>견적 {r._count.quotations}건</span>
+                    <span>견적 {r._count.quotations}건 접수</span>
                   </div>
                 </CardContent>
               </Card>

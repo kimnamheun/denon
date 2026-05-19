@@ -154,7 +154,7 @@ export default function ClinicSearchPage() {
                 { value: "LOW", label: "저가형" },
                 { value: "MEDIUM", label: "중가형" },
                 { value: "HIGH", label: "고가형" },
-                { value: "PREMIUM", label: "프리미엄" },
+                { value: "PREMIUM", label: "최고가형" },
               ]}
               value={priceRange || null}
               onChange={(v) => setPriceRange(v ?? "")}
@@ -192,7 +192,7 @@ export default function ClinicSearchPage() {
               size="sm"
               multi
               options={[
-                { value: "premium", label: "프리미엄만" },
+                { value: "premium", label: "광고 노출만" },
                 { value: "parking", label: "주차 가능" },
               ]}
               value={[
@@ -235,7 +235,7 @@ export default function ClinicSearchPage() {
                         <h3 className="font-semibold truncate">{c.name}</h3>
                         {c.isPremium && (
                           <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700">
-                            프리미엄
+                            광고
                           </span>
                         )}
                         {c.hasParking && (

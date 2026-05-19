@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 import { AppHeader } from "@/components/app-header";
+import { AppFooter } from "@/components/app-footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Providers>
           <AppHeader />
           {children}
+          <AppFooter />
         </Providers>
         {NAVER_MAP_CLIENT_ID && (
           <Script

@@ -48,7 +48,7 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
                 {clinic.name}
                 {clinic.isPremium && (
                   <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700">
-                    프리미엄
+                    광고
                   </span>
                 )}
               </CardTitle>
