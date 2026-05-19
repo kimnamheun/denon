@@ -19,7 +19,8 @@ const ADMIN_PREFIX = "/admin";
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;
-  if (pathname.startsWith("/api/auth/")) return true;
+  // API 라우트는 각자 세션·권한 체크하므로 미들웨어 통과
+  if (pathname.startsWith("/api/")) return true;
   if (pathname.startsWith("/clinics/")) return true;
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/favicon")) return true;
