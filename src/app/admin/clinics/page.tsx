@@ -24,7 +24,7 @@ export default async function AdminClinicsPage() {
 
       <Card>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead className="text-xs text-muted-foreground border-b">
               <tr>
                 <th className="text-left p-3">병원명</th>

@@ -84,7 +84,7 @@ export function ClinicRegisterForm() {
           </div>
 
           {error && (
-            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
+            <div className="text-base text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
           )}
 
           <Button type="submit" disabled={submitting} className="w-full">

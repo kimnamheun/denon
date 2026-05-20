@@ -109,7 +109,7 @@ export async function PatientTimeline({ userId }: Props) {
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Activity className="h-5 w-5" /> 최근 활동
           </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">내 견적·예약·리뷰 활동 타임라인</p>
+          <p className="text-base text-muted-foreground mt-0.5">내 견적·예약·리뷰 활동 타임라인</p>
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export async function PatientTimeline({ userId }: Props) {
                 <Link href={item.href} className="flex items-start gap-3 group">
                   <TimelineIcon type={item.type} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-base">
                       <span className="font-medium group-hover:text-blue-600 transition-colors">
                         {item.title}
                       </span>

@@ -45,7 +45,7 @@ export default async function QuotationRequestDetailPage({
   return (
     <main className="container max-w-4xl py-10 space-y-6">
       <div className="flex items-center justify-between">
-        <Link href="/patient/quotation-requests" className="text-sm text-muted-foreground hover:underline">
+        <Link href="/patient/quotation-requests" className="text-base text-muted-foreground hover:underline">
           ← 목록으로
         </Link>
         <div className="flex gap-2">
@@ -71,7 +71,7 @@ export default async function QuotationRequestDetailPage({
             </span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-base">
           <Field label="치아 위치">
             {request.missingTeeth.map((t) => t.toothNumber).sort().join(", ") || "-"}
           </Field>
@@ -118,10 +118,10 @@ export default async function QuotationRequestDetailPage({
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-semibold">{q.clinic.name}</div>
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-base text-muted-foreground mt-1">
                           {q.dentist.user.name} 원장 · 평점 {Number(q.clinic.rating).toFixed(1)} ({q.clinic.reviewCount})
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-base text-muted-foreground">
                           {q.clinic.sido} {q.clinic.sigungu}
                         </div>
                       </div>

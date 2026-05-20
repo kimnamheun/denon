@@ -61,24 +61,24 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 -mr-1 rounded-md hover:bg-muted"
+        className="relative p-2.5 -mr-1 rounded-lg hover:bg-muted"
         aria-label="알림"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-6 w-6" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-[1.3rem] h-[1.3rem] px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-background border rounded-lg shadow-lg overflow-hidden z-50">
-          <div className="px-4 py-3 border-b font-semibold text-sm">
-            알림 {unreadCount > 0 && <span className="text-blue-600">({unreadCount})</span>}
+        <div className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-2rem)] bg-background border-2 rounded-xl shadow-lg overflow-hidden z-50">
+          <div className="px-5 py-4 border-b font-bold text-base">
+            알림 {unreadCount > 0 && <span className="text-primary">({unreadCount})</span>}
           </div>
           {items.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
+            <div className="p-10 text-center text-base text-muted-foreground">
               새 알림이 없습니다
             </div>
           ) : (
@@ -88,13 +88,13 @@ export function NotificationBell() {
                   <Link
                     href={n.href}
                     onClick={() => setOpen(false)}
-                    className={cn("block px-4 py-3 hover:bg-muted")}
+                    className={cn("block px-5 py-4 hover:bg-muted")}
                   >
-                    <div className="text-sm font-medium line-clamp-1">{n.title}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                    <div className="text-base font-semibold line-clamp-1">{n.title}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-2 mt-1">
                       {n.desc}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1.5">
                       {new Date(n.at).toLocaleString("ko-KR", {
                         month: "short",
                         day: "numeric",

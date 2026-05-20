@@ -243,7 +243,7 @@ export function ClinicEditForm({ clinicId, initial }: Props) {
               checked={form.hasParking}
               onChange={(e) => setForm((p) => ({ ...p, hasParking: e.target.checked }))}
             />
-            <span className="text-sm">주차 가능</span>
+            <span className="text-base">주차 가능</span>
           </label>
         </CardContent>
       </Card>
@@ -253,7 +253,7 @@ export function ClinicEditForm({ clinicId, initial }: Props) {
           <CardTitle>영업시간</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead className="text-xs text-muted-foreground">
               <tr>
                 <th className="text-left">요일</th>
@@ -300,10 +300,10 @@ export function ClinicEditForm({ clinicId, initial }: Props) {
       </Card>
 
       {error && (
-        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
+        <div className="text-base text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
       )}
       {savedMsg && (
-        <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md">저장되었습니다</div>
+        <div className="text-base text-green-700 bg-green-50 p-3 rounded-md">저장되었습니다</div>
       )}
 
       <div className="flex justify-end">

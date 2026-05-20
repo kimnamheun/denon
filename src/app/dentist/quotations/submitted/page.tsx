@@ -79,7 +79,7 @@ export default async function SubmittedQuotationsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between items-end">
-                      <p className="text-sm text-muted-foreground line-clamp-1 flex-1">
+                      <p className="text-base text-muted-foreground line-clamp-1 flex-1">
                         {q.request.symptoms ?? ""}
                       </p>
                       <div className="text-xl font-bold ml-3">

@@ -154,7 +154,7 @@ function BookingForm() {
             </div>
 
             {error && (
-              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
+              <div className="text-base text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
             )}
 
             <div className="flex justify-end gap-2">

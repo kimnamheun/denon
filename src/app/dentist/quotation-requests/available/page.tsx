@@ -74,7 +74,7 @@ export default async function AvailableRequestsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm line-clamp-3 text-muted-foreground">
+                  <p className="text-base line-clamp-3 text-muted-foreground">
                     {r.symptoms ?? "(증상 미입력)"}
                   </p>
                   <div className="mt-3 text-xs text-muted-foreground">

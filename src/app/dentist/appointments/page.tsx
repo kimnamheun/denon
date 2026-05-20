@@ -71,7 +71,7 @@ export default async function DentistAppointmentsPage() {
                         </div>
                       </CardHeader>
                       {c.notes && (
-                        <CardContent className="pt-0 text-sm text-muted-foreground">
+                        <CardContent className="pt-0 text-base text-muted-foreground">
                           메모: {c.notes}
                         </CardContent>
                       )}

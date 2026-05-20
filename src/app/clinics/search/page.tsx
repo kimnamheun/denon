@@ -108,7 +108,7 @@ export default function ClinicSearchPage() {
     <main className="container max-w-6xl py-6">
       <div className="mb-4">
         <h1 className="text-2xl font-bold">치과 찾기</h1>
-        <p className="text-sm text-muted-foreground">현재 위치 주변의 치과를 검색하세요</p>
+        <p className="text-base text-muted-foreground">현재 위치 주변의 치과를 검색하세요</p>
       </div>
 
       <Card className="mb-4">
@@ -212,7 +212,7 @@ export default function ClinicSearchPage() {
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
           {clinics.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-muted-foreground text-sm">
+              <CardContent className="py-8 text-center text-muted-foreground text-base">
                 {loading ? "검색 중..." : "조건에 맞는 치과가 없습니다"}
               </CardContent>
             </Card>

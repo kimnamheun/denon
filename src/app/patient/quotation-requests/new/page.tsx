@@ -243,7 +243,7 @@ export default function NewQuotationRequestPage() {
         >
           <Camera className="mb-3 h-10 w-10 text-muted-foreground" />
           <span className="text-lg font-semibold">사진 고르기</span>
-          <span className="mt-1 text-sm text-muted-foreground">
+          <span className="mt-1 text-base text-muted-foreground">
             여러 장 한꺼번에 고를 수 있어요
           </span>
           <input

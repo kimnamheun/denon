@@ -28,7 +28,7 @@ export async function AdminHero({ userName }: Props) {
     <section className="bg-gradient-to-br from-purple-50 via-white to-blue-50 border-b">
       <div className="container max-w-5xl py-8 md:py-12">
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground">관리자</p>
+          <p className="text-base text-muted-foreground">관리자</p>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1">{userName} 님</h1>
         </div>
 
@@ -56,11 +56,11 @@ export async function AdminHero({ userName }: Props) {
               <h2 className="font-bold flex items-center gap-2">
                 <Users className="h-5 w-5" /> 최근 가입자
               </h2>
-              <Link href="/admin/users" className="text-sm text-blue-600 hover:underline">
+              <Link href="/admin/users" className="text-base text-blue-600 hover:underline">
                 전체보기 →
               </Link>
             </div>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-base">
               {recentUsers.map((u) => (
                 <li key={u.id} className="flex items-center justify-between py-1 border-b last:border-0">
                   <div className="flex items-center gap-2">

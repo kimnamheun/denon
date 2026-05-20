@@ -10,20 +10,23 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* 노년 친화: primary 를 진한 파랑(신뢰감 + 가독성)으로, 대비비 7:1 이상 */
+    --primary: 217 91% 35%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* 노년 친화: muted-foreground 약간 더 진하게 (대비 강화) */
+    --muted-foreground: 215 25% 35%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --destructive: 0 84.2% 50%;
+    --destructive-foreground: 0 0% 100%;
+    /* 노년 친화: border 살짝 더 진하게 (외곽선 잘 보이게) */
+    --border: 214 25% 82%;
+    --input: 214 25% 82%;
+    --ring: 217 91% 35%;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -55,5 +58,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* 노년 친화: 본문 leading 1.6, 한글 자간 살짝, 폰트 antialiasing */
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+  /* 노년 친화: 모든 헤딩 leading-tight 로 통일, 본문 leading-relaxed */
+  h1, h2, h3, h4, h5, h6 {
+    @apply leading-tight;
+  }
+  /* 접근성: focus 표시 강조 */
+  *:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2;
+    outline: none;
   }
 }

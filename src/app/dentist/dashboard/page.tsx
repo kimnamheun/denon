@@ -30,7 +30,7 @@ function DashCard({ title, desc, href }: { title: string; desc: string; href: st
     <Link href={href}>
       <div className="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow cursor-pointer h-full">
         <h2 className="font-semibold mb-1">{title}</h2>
-        <p className="text-sm text-muted-foreground">{desc}</p>
+        <p className="text-base text-muted-foreground">{desc}</p>
       </div>
     </Link>
   );

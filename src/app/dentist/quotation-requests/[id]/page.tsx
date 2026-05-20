@@ -43,7 +43,7 @@ export default async function DentistRequestViewPage({
 
   return (
     <main className="container max-w-3xl py-10 space-y-6">
-      <Link href="/dentist/quotation-requests/available" className="text-sm text-muted-foreground hover:underline">
+      <Link href="/dentist/quotation-requests/available" className="text-base text-muted-foreground hover:underline">
         ← 목록으로
       </Link>
 
@@ -56,7 +56,7 @@ export default async function DentistRequestViewPage({
             요청일: {new Date(request.createdAt).toLocaleString("ko-KR")} · 환자: {request.patient.user.name}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-base">
           <Field label="치아 위치">
             {request.missingTeeth.map((t) => t.toothNumber).sort().join(", ") || "-"}
           </Field>
@@ -87,7 +87,7 @@ export default async function DentistRequestViewPage({
       <div className="flex justify-end gap-2">
         {alreadyQuoted ? (
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">이미 견적서를 작성하셨습니다</p>
+            <p className="text-base text-muted-foreground">이미 견적서를 작성하셨습니다</p>
             <Link href={`/dentist/quotations/${request.quotations[0].id}`}>
               <Button variant="outline">내 견적서 보기</Button>
             </Link>
@@ -97,7 +97,7 @@ export default async function DentistRequestViewPage({
             <Button>견적서 작성하기</Button>
           </Link>
         ) : (
-          <p className="text-sm text-muted-foreground">마감된 요청입니다</p>
+          <p className="text-base text-muted-foreground">마감된 요청입니다</p>
         )}
       </div>
     </main>

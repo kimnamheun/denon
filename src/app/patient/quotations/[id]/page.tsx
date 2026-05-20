@@ -33,7 +33,7 @@ export default async function ReceivedQuotationDetailPage({
     <main className="container max-w-3xl py-10 space-y-6">
       <Link
         href={`/patient/quotation-requests/${q.quotationRequestId}`}
-        className="text-sm text-muted-foreground hover:underline"
+        className="text-base text-muted-foreground hover:underline"
       >
         ← 요청으로 돌아가기
       </Link>
@@ -57,7 +57,7 @@ export default async function ReceivedQuotationDetailPage({
           </Section>
 
           <Section title="임플란트 항목">
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead className="text-xs text-muted-foreground">
                 <tr>
                   <th className="text-left py-1">치아</th>
@@ -83,7 +83,7 @@ export default async function ReceivedQuotationDetailPage({
 
           {q.additionalItems.length > 0 && (
             <Section title="추가 항목">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <tbody>
                   {q.additionalItems.map((it) => (
                     <tr key={it.id} className="border-t">
@@ -97,7 +97,7 @@ export default async function ReceivedQuotationDetailPage({
           )}
 
           <Section title="조건">
-            <dl className="grid grid-cols-2 gap-y-1 text-sm">
+            <dl className="grid grid-cols-2 gap-y-1 text-base">
               <dt className="text-muted-foreground">치료 기간</dt>
               <dd>{q.treatmentDuration}개월</dd>
               <dt className="text-muted-foreground">보증 기간</dt>
@@ -109,11 +109,11 @@ export default async function ReceivedQuotationDetailPage({
 
           {q.additionalNotes && (
             <Section title="추가 메모">
-              <p className="whitespace-pre-wrap text-sm">{q.additionalNotes}</p>
+              <p className="whitespace-pre-wrap text-base">{q.additionalNotes}</p>
             </Section>
           )}
 
-          <div className="border rounded-md p-4 bg-muted/40 space-y-1 text-sm">
+          <div className="border rounded-md p-4 bg-muted/40 space-y-1 text-base">
             <Row label="임플란트 합계" value={Number(q.implantTotalAmount)} />
             <Row label="추가 항목 합계" value={Number(q.additionalTotalAmount)} />
             <Row label="총액" value={Number(q.totalAmount)} />

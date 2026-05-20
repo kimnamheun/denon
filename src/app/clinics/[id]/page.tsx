@@ -36,7 +36,7 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
 
   return (
     <main className="container max-w-3xl py-10 space-y-6">
-      <Link href="/clinics/search" className="text-sm text-muted-foreground hover:underline">
+      <Link href="/clinics/search" className="text-base text-muted-foreground hover:underline">
         ← 병원 검색으로
       </Link>
 
@@ -58,7 +58,7 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-base">
           {clinic.photos.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {clinic.photos.map((p) => (
@@ -129,10 +129,10 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
               <Card key={r.id}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">{r.patient.user.name.slice(0, 1)}***</span>
+                    <span className="font-medium text-base">{r.patient.user.name.slice(0, 1)}***</span>
                     <span className="text-amber-500">{"★".repeat(r.rating)}</span>
                   </div>
-                  {r.comment && <p className="text-sm mt-2">{r.comment}</p>}
+                  {r.comment && <p className="text-base mt-2">{r.comment}</p>}
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(r.createdAt).toLocaleDateString("ko-KR")}
                   </p>

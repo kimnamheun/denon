@@ -47,7 +47,7 @@ export function QuotationActions({ quotationId, status, clinicId, dentistId }: P
     return (
       <Card>
         <CardContent className="p-5 space-y-3">
-          {error && <div className="text-sm text-destructive">{error}</div>}
+          {error && <div className="text-base text-destructive">{error}</div>}
           <div className="flex justify-end gap-2">
             <Button variant="outline" disabled={busy} onClick={() => changeStatus("REJECT")}>
               거절
@@ -65,7 +65,7 @@ export function QuotationActions({ quotationId, status, clinicId, dentistId }: P
     return (
       <Card>
         <CardContent className="p-5 flex justify-between items-center">
-          <p className="text-sm text-green-700">이 견적서를 수락하셨습니다. 상담 예약을 진행하세요.</p>
+          <p className="text-base text-green-700">이 견적서를 수락하셨습니다. 상담 예약을 진행하세요.</p>
           <Button
             onClick={() =>
               router.push(

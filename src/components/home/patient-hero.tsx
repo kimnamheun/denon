@@ -62,7 +62,7 @@ export async function PatientHero({ userId, userName }: Props) {
     <section className="bg-gradient-to-br from-blue-50 via-white to-emerald-50 border-b">
       <div className="container max-w-5xl py-8 md:py-12">
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground">안녕하세요</p>
+          <p className="text-base text-muted-foreground">안녕하세요</p>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1">{userName} 님</h1>
         </div>
 
@@ -132,7 +132,7 @@ export async function PatientHero({ userId, userName }: Props) {
               <h2 className="font-bold text-lg flex items-center gap-2">
                 <Inbox className="h-5 w-5" /> 최근 받은 견적서
               </h2>
-              <Link href="/patient/quotations" className="text-sm text-blue-600 hover:underline">
+              <Link href="/patient/quotations" className="text-base text-blue-600 hover:underline">
                 전체보기 →
               </Link>
             </div>
@@ -141,7 +141,7 @@ export async function PatientHero({ userId, userName }: Props) {
                 <Link key={q.id} href={`/patient/quotations/${q.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-3">
-                      <div className="text-sm font-semibold line-clamp-1">{q.clinic.name}</div>
+                      <div className="text-base font-semibold line-clamp-1">{q.clinic.name}</div>
                       <div className="text-xs text-muted-foreground mb-2">
                         {q.dentist.user.name} 원장 · {timeAgo(q.createdAt)}
                       </div>
@@ -183,7 +183,7 @@ function QuickActionCard({
         <CardContent className="p-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {icon}
-            <span className="text-sm font-medium">{label}</span>
+            <span className="text-base font-medium">{label}</span>
           </div>
           {badge !== undefined && (
             <span

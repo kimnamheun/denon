@@ -56,7 +56,7 @@ export function RegionalClinics() {
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MapPin className="h-5 w-5" /> 지역별 인기 치과
           </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">지역을 선택하면 상위 치과를 보여드려요</p>
+          <p className="text-base text-muted-foreground mt-0.5">지역을 선택하면 상위 치과를 보여드려요</p>
         </div>
       </div>
 
@@ -70,10 +70,10 @@ export function RegionalClinics() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground text-center py-8">불러오는 중...</p>
+        <p className="text-base text-muted-foreground text-center py-8">불러오는 중...</p>
       ) : clinics.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          <CardContent className="py-8 text-center text-base text-muted-foreground">
             {sido} 지역에 등록된 병원이 없습니다
           </CardContent>
         </Card>
@@ -91,7 +91,7 @@ export function RegionalClinics() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-base mb-1">
                     <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                     <span className="font-medium">{c.rating.toFixed(1)}</span>
                     <span className="text-muted-foreground text-xs">

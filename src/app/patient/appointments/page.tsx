@@ -55,13 +55,13 @@ export default async function PatientAppointmentsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-sm">
+                    <div className="text-base">
                       <span className="font-medium">
                         {new Date(c.scheduledAt).toLocaleString("ko-KR")}
                       </span>{" "}
                       <span className="text-muted-foreground">({c.duration}분)</span>
                     </div>
-                    {c.notes && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{c.notes}</p>}
+                    {c.notes && <p className="text-base text-muted-foreground mt-1 line-clamp-1">{c.notes}</p>}
                   </CardContent>
                 </Card>
               </Link>

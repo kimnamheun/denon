@@ -114,7 +114,7 @@ function ReviewForm() {
                   </button>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">{rating} / 5</p>
+              <p className="text-base text-muted-foreground mt-1">{rating} / 5</p>
             </div>
 
             <div>
@@ -129,7 +129,7 @@ function ReviewForm() {
             </div>
 
             {error && (
-              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
+              <div className="text-base text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
             )}
 
             <div className="flex justify-end gap-2">

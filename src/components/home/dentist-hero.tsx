@@ -82,7 +82,7 @@ export async function DentistHero({ userId, userName }: Props) {
     <section className="bg-gradient-to-br from-emerald-50 via-white to-blue-50 border-b">
       <div className="container max-w-5xl py-8 md:py-12">
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground">안녕하세요</p>
+          <p className="text-base text-muted-foreground">안녕하세요</p>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1">{userName} 원장님</h1>
         </div>
 
@@ -125,7 +125,7 @@ export async function DentistHero({ userId, userName }: Props) {
                 </h2>
                 <Link
                   href="/dentist/appointments"
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-base text-blue-600 hover:underline"
                 >
                   전체보기 →
                 </Link>
@@ -134,7 +134,7 @@ export async function DentistHero({ userId, userName }: Props) {
                 {todayAppointments.map((c) => (
                   <li
                     key={c.id}
-                    className="flex items-center justify-between py-2 border-b last:border-0 text-sm"
+                    className="flex items-center justify-between py-2 border-b last:border-0 text-base"
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-blue-600 font-semibold">
@@ -161,13 +161,13 @@ export async function DentistHero({ userId, userName }: Props) {
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-bold text-lg flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" /> 응답 가능한 요청
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="text-base font-normal text-muted-foreground">
                   ({availableRequests})
                 </span>
               </h2>
               <Link
                 href="/dentist/quotation-requests/available"
-                className="text-sm text-blue-600 hover:underline"
+                className="text-base text-blue-600 hover:underline"
               >
                 전체보기 →
               </Link>
@@ -180,7 +180,7 @@ export async function DentistHero({ userId, userName }: Props) {
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-1">
-                          <span className="text-sm font-medium">
+                          <span className="text-base font-medium">
                             치아 {r.missingTeeth.length}개
                           </span>
                           <span

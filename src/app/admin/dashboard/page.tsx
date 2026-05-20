@@ -70,7 +70,7 @@ function Stat({ title, value, subtitle }: { title: string; value: number; subtit
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-base text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-bold">{value.toLocaleString("ko-KR")}</div>
@@ -88,7 +88,7 @@ function NavCard({ href, title, desc }: { href: string; title: string; desc: str
           <CardTitle className="text-lg">{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{desc}</p>
+          <p className="text-base text-muted-foreground">{desc}</p>
         </CardContent>
       </Card>
     </Link>

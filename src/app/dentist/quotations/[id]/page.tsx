@@ -44,7 +44,7 @@ export default async function DentistQuotationDetailPage({
 
   return (
     <main className="container max-w-3xl py-10 space-y-6">
-      <Link href="/dentist/quotations/submitted" className="text-sm text-muted-foreground hover:underline">
+      <Link href="/dentist/quotations/submitted" className="text-base text-muted-foreground hover:underline">
         ← 목록으로
       </Link>
 
@@ -70,7 +70,7 @@ export default async function DentistQuotationDetailPage({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-base">
           <Section title="환자 요청 치아">
             {q.request.missingTeeth.map((t) => t.toothNumber).sort().join(", ")}
           </Section>
@@ -80,7 +80,7 @@ export default async function DentistQuotationDetailPage({
           </Section>
 
           <Section title="임플란트 항목">
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead className="text-xs text-muted-foreground">
                 <tr>
                   <th className="text-left py-1">치아</th>

@@ -278,7 +278,7 @@ function NewQuotationForm() {
                 </div>
               </div>
             ))}
-            <div className="text-right text-sm pt-2 border-t">
+            <div className="text-right text-base pt-2 border-t">
               임플란트 합계: <span className="font-semibold">{implantTotal.toLocaleString("ko-KR")}원</span>
             </div>
           </CardContent>
@@ -298,7 +298,7 @@ function NewQuotationForm() {
           </CardHeader>
           <CardContent className="space-y-3">
             {additionalItems.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-base text-muted-foreground text-center py-4">
                 추가 항목이 없습니다
               </p>
             )}
@@ -404,7 +404,7 @@ function NewQuotationForm() {
         </Card>
 
         {error && (
-          <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
+          <div className="text-base text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
         )}
 
         <div className="flex justify-end gap-2">
@@ -422,7 +422,7 @@ function NewQuotationForm() {
 
 function Row({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between text-base">
       <span>{label}</span>
       <span>{value.toLocaleString("ko-KR")}원</span>
     </div>

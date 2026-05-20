@@ -48,17 +48,17 @@ function LoginForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">로그인</h1>
-          <p className="text-muted-foreground mt-2 text-sm">
+          <h1 className="text-3xl font-bold">로그인</h1>
+          <p className="text-muted-foreground mt-3 text-base">
             계정에 로그인하여 견적을 비교하세요
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
+            <label htmlFor="email" className="block text-base font-semibold mb-2">
               이메일
             </label>
             <input
@@ -67,12 +67,12 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+              className="w-full h-12 px-4 rounded-lg border-2 border-input bg-background text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
+            <label htmlFor="password" className="block text-base font-semibold mb-2">
               비밀번호
             </label>
             <input
@@ -82,24 +82,24 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+              className="w-full h-12 px-4 rounded-lg border-2 border-input bg-background text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
           {error && (
-            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+            <div className="text-base text-destructive bg-destructive/10 p-4 rounded-lg font-medium">
               {error}
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? "로그인 중..." : "로그인"}
           </Button>
         </form>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-base text-muted-foreground">
           계정이 없으신가요?{" "}
-          <Link href="/auth/register" className="text-primary hover:underline">
+          <Link href="/auth/register" className="text-primary font-semibold hover:underline">
             회원가입
           </Link>
         </div>

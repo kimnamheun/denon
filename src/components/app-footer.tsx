@@ -3,15 +3,15 @@ import Link from "next/link";
 export function AppFooter() {
   return (
     <footer className="border-t bg-muted/30 mt-16">
-      <div className="container max-w-5xl py-8 space-y-6">
-        {/* 면책 / 의료법 안내 */}
-        <div className="rounded-lg border bg-background p-4 text-xs text-muted-foreground leading-relaxed">
-          <p className="font-semibold text-foreground mb-2">서비스 안내</p>
-          <p className="mb-2">
+      <div className="container max-w-5xl py-10 space-y-8">
+        {/* 면책 / 의료법 안내 — 노년 친화: 폰트 한 단계 키움 */}
+        <div className="rounded-xl border bg-background p-5 text-sm text-muted-foreground leading-relaxed">
+          <p className="font-bold text-foreground mb-3 text-base">서비스 안내</p>
+          <p className="mb-3">
             본 플랫폼은 의료기관·의료인과 별개의 <strong>정보 제공 서비스</strong>로,
             의료법 제27조에서 금지하는 환자 알선·유인 행위를 수행하지 않습니다.
           </p>
-          <ul className="space-y-1 list-disc list-inside">
+          <ul className="space-y-2 list-disc list-inside">
             <li>표시된 견적 금액은 <strong>참고용 평균</strong>이며, 정확한 비용은 의료기관 상담 시 안내됩니다.</li>
             <li>모든 시술 결정은 본인 책임 하에 의료진과 충분한 상담 후 결정하시기 바랍니다.</li>
             <li>병원 정렬/노출 순서는 평점·리뷰 수 등 객관적 지표를 기준으로 하며, 광고성 노출은 별도 표기됩니다.</li>
@@ -20,39 +20,39 @@ export function AppFooter() {
           </ul>
         </div>
 
-        {/* 링크 / 회사 정보 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        {/* 링크 / 회사 정보 — 노년 친화: 본문 폰트, 큰 클릭 영역 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-base">
           <div>
-            <h3 className="font-semibold mb-2">서비스</h3>
-            <ul className="space-y-1 text-muted-foreground">
-              <li><Link href="/clinics/search" className="hover:underline">병원 검색</Link></li>
-              <li><Link href="/auth/register" className="hover:underline">회원가입</Link></li>
+            <h3 className="font-bold mb-3">서비스</h3>
+            <ul className="space-y-2 text-muted-foreground">
+              <li><Link href="/clinics/search" className="hover:underline hover:text-foreground py-1 inline-block">병원 검색</Link></li>
+              <li><Link href="/auth/register" className="hover:underline hover:text-foreground py-1 inline-block">회원가입</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-2">정책</h3>
-            <ul className="space-y-1 text-muted-foreground">
-              <li><Link href="/terms" className="hover:underline">이용약관</Link></li>
-              <li><Link href="/privacy" className="hover:underline">개인정보처리방침</Link></li>
+            <h3 className="font-bold mb-3">정책</h3>
+            <ul className="space-y-2 text-muted-foreground">
+              <li><Link href="/terms" className="hover:underline hover:text-foreground py-1 inline-block">이용약관</Link></li>
+              <li><Link href="/privacy" className="hover:underline hover:text-foreground py-1 inline-block">개인정보처리방침</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-2">고객지원</h3>
-            <ul className="space-y-1 text-muted-foreground">
+            <h3 className="font-bold mb-3">고객지원</h3>
+            <ul className="space-y-2 text-muted-foreground">
               <li>support@denon.example</li>
               <li>운영 10:00 ~ 18:00 (주말 휴무)</li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-2">회사</h3>
-            <ul className="space-y-1 text-muted-foreground">
+            <h3 className="font-bold mb-3">회사</h3>
+            <ul className="space-y-2 text-muted-foreground">
               <li>치과 임플란트 중계 플랫폼</li>
               <li>사업자 등록: 000-00-00000</li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t pt-4 text-xs text-muted-foreground text-center">
+        <div className="border-t pt-5 text-sm text-muted-foreground text-center">
           © {new Date().getFullYear()} Denon. All rights reserved.
         </div>
       </div>

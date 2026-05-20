@@ -81,7 +81,7 @@ export default async function MyQuotationRequestsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-sm">
+                    <div className="text-base">
                       받은 견적서:{" "}
                       <span className="font-semibold">{r._count.quotations}건</span>
                     </div>

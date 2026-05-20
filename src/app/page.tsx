@@ -34,7 +34,7 @@ export default async function HomePage() {
       {(role === "PATIENT" || !role) && (
         <section className="container max-w-5xl py-8">
           <h2 className="text-xl font-bold mb-1">어떤 임플란트가 필요하세요?</h2>
-          <p className="text-sm text-muted-foreground mb-4">카테고리를 선택하면 견적 요청으로 이동합니다</p>
+          <p className="text-base text-muted-foreground mb-4">카테고리를 선택하면 견적 요청으로 이동합니다</p>
           <CategoryGrid />
         </section>
       )}
@@ -159,9 +159,9 @@ async function PopularClinicsSection() {
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Star className="h-5 w-5" /> 리뷰 상위 치과
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">환자 평점·리뷰 수 기준 정렬</p>
+            <p className="text-base text-muted-foreground mt-0.5">환자 평점·리뷰 수 기준 정렬</p>
           </div>
-          <Link href="/clinics/search" className="text-sm text-blue-600 hover:underline whitespace-nowrap">
+          <Link href="/clinics/search" className="text-base text-blue-600 hover:underline whitespace-nowrap">
             전체보기 →
           </Link>
         </div>
@@ -179,7 +179,7 @@ async function PopularClinicsSection() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-base mb-1">
                     <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                     <span className="font-medium">{Number(c.rating).toFixed(1)}</span>
                     <span className="text-muted-foreground text-xs">
@@ -228,7 +228,7 @@ async function RecentReviewsSection() {
   return (
     <section className="container max-w-5xl py-8">
       <h2 className="text-xl font-bold mb-1">실제 환자 후기</h2>
-      <p className="text-sm text-muted-foreground mb-4">치료 받은 분들의 솔직한 리뷰</p>
+      <p className="text-base text-muted-foreground mb-4">치료 받은 분들의 솔직한 리뷰</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {reviews.map((r) => (
@@ -239,7 +239,7 @@ async function RecentReviewsSection() {
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
                     {r.patient.user.name[0]}
                   </div>
-                  <span className="text-sm font-medium">{maskName(r.patient.user.name)}</span>
+                  <span className="text-base font-medium">{maskName(r.patient.user.name)}</span>
                 </div>
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -258,7 +258,7 @@ async function RecentReviewsSection() {
               >
                 📍 {r.clinic.name}
               </Link>
-              <p className="text-sm line-clamp-3 text-foreground/80">{r.comment ?? "(리뷰 내용 없음)"}</p>
+              <p className="text-base line-clamp-3 text-foreground/80">{r.comment ?? "(리뷰 내용 없음)"}</p>
               <p className="text-xs text-muted-foreground mt-2">{timeAgo(r.createdAt)}</p>
             </CardContent>
           </Card>
@@ -297,14 +297,14 @@ async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
         <div className="flex items-end justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold">실시간 활동 현황</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-base text-muted-foreground mt-0.5">
               플랫폼에서 진행 중인 견적 요청 건수
             </p>
           </div>
           {isDentist && (
             <Link
               href="/dentist/quotation-requests/available"
-              className="text-sm text-blue-600 hover:underline whitespace-nowrap"
+              className="text-base text-blue-600 hover:underline whitespace-nowrap"
             >
               전체보기 →
             </Link>
@@ -318,7 +318,7 @@ async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
               <Card className="hover:shadow-md transition-shadow h-full">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="text-sm font-medium">
+                    <div className="text-base font-medium">
                       임플란트 견적 요청 (치아 {r.missingTeeth.length}개)
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${urg.className}`}>
@@ -370,7 +370,7 @@ function HowCard({ step, title, desc }: { step: string; title: string; desc: str
         {step}
       </div>
       <h3 className="font-semibold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground">{desc}</p>
+      <p className="text-base text-muted-foreground">{desc}</p>
     </div>
   );
 }

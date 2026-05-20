@@ -67,7 +67,7 @@ export default async function AdminUsersPage({
 
       <Card>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead className="text-xs text-muted-foreground border-b">
               <tr>
                 <th className="text-left p-3">이름</th>
@@ -132,7 +132,7 @@ function Pagination({
         <a
           key={p}
           href={`?${base}${base ? "&" : ""}page=${p}`}
-          className={`px-3 py-1 text-sm rounded ${
+          className={`px-3 py-1 text-base rounded ${
             p === page ? "bg-primary text-primary-foreground" : "hover:bg-muted"
           }`}
         >

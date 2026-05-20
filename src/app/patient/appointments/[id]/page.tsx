@@ -32,7 +32,7 @@ export default async function PatientAppointmentDetailPage({
 
   return (
     <main className="container max-w-2xl py-10 space-y-6">
-      <Link href="/patient/appointments" className="text-sm text-muted-foreground hover:underline">
+      <Link href="/patient/appointments" className="text-base text-muted-foreground hover:underline">
         ← 예약 목록
       </Link>
 
@@ -40,7 +40,7 @@ export default async function PatientAppointmentDetailPage({
         <CardHeader>
           <CardTitle>상담 예약 상세</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
+        <CardContent className="space-y-3 text-base">
           <Row label="병원">{c.clinic.name}</Row>
           <Row label="의사">{c.dentist.user.name} 원장</Row>
           <Row label="일시">{new Date(c.scheduledAt).toLocaleString("ko-KR")}</Row>
@@ -61,7 +61,7 @@ export default async function PatientAppointmentDetailPage({
         {canCancel && <CancelButton consultationId={c.id} />}
         {canReview && (
           <Link href={`/patient/reviews/new?consultationId=${c.id}`}>
-            <span className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <span className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary/90">
               리뷰 작성
             </span>
           </Link>
