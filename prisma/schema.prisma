@@ -178,6 +178,7 @@ model Patient {
   quotationRequests QuotationRequest[]
   consultations     Consultation[]
   reviews           Review[]
+  chatRooms         ChatRoom[]
 
   @@map("patients")
 }
@@ -197,6 +198,7 @@ model Dentist {
   quotations    Quotation[]
   consultations Consultation[]
   reviews       Review[]
+  chatRooms     ChatRoom[]
 
   @@map("dentists")
 }
@@ -467,4 +469,54 @@ model Review {
   @@index([dentistId])
   @@index([clinicId])
   @@map("reviews")
+}
+
+// ──────────────────────────────────────────────────────────
+// 채팅 (환자 ↔ 의사 1:1 상담 문의)
+// 의료법 27조 회피: 직접 진료 알선/유인 행위 없이 일반 정보 교환 용도.
+// 견적 요청 또는 견적서를 컨텍스트로 방이 만들어진다.
+// ──────────────────────────────────────────────────────────
+
+model ChatRoom {
+  id                 String  @id @default(cuid())
+  // 컨텍스트: 견적서 또는 견적 요청 둘 중 하나에 연결 (선택)
+  quotationId        String? @map("quotation_id")
+  quotationRequestId String? @map("request_id")
+
+  patientId String @map("patient_id")
+  dentistId String @map("dentist_id")
+
+  lastMessageAt      DateTime? @map("last_message_at")
+  lastMessagePreview String?   @map("last_message_preview") @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  patient  Patient       @relation(fields: [patientId], references: [id])
+  dentist  Dentist       @relation(fields: [dentistId], references: [id])
+  messages ChatMessage[]
+
+  // 같은 (환자, 의사, 견적서) 조합으로는 방 1개만
+  @@unique([quotationId, patientId, dentistId])
+  @@index([patientId, lastMessageAt])
+  @@index([dentistId, lastMessageAt])
+  @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id         String    @id @default(cuid())
+  roomId     String    @map("room_id")
+  senderId   String    @map("sender_id")
+  senderRole UserRole  @map("sender_role")
+  content    String    @db.Text
+  // null 이면 미읽음. 상대방이 방에 들어와 GET 할 때 일괄 readAt = now() 처리.
+  readAt     DateTime? @map("read_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@map("chat_messages")
 }

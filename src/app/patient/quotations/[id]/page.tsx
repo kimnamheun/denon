@@ -4,6 +4,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { StartChatButton } from "@/components/chat/start-chat-button";
 import { QuotationActions } from "./actions";
 
 export default async function ReceivedQuotationDetailPage({
@@ -40,15 +41,24 @@ export default async function ReceivedQuotationDetailPage({
 
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <CardTitle>{q.clinic.name}</CardTitle>
               <CardDescription>
                 {q.dentist.user.name} 원장 · 평점 {Number(q.clinic.rating).toFixed(1)} (
                 {q.clinic.reviewCount}) · {q.clinic.sido} {q.clinic.sigungu}
               </CardDescription>
             </div>
-            <StatusBadge status={q.status} />
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <StatusBadge status={q.status} />
+              <StartChatButton
+                quotationId={q.id}
+                basePath="/patient/chat"
+                label="의사선생님께 문의"
+                size="default"
+                variant="outline"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

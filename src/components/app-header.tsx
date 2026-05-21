@@ -19,6 +19,7 @@ export function AppHeader() {
       { href: "/patient/dashboard", label: "대시보드" },
       { href: "/patient/quotation-requests", label: "내 견적 요청" },
       { href: "/patient/quotations", label: "받은 견적서" },
+      { href: "/patient/chat", label: "상담 문의" },
       { href: "/patient/appointments", label: "예약" },
       { href: "/clinics/search", label: "병원 검색" },
     );
@@ -27,6 +28,7 @@ export function AppHeader() {
       { href: "/dentist/dashboard", label: "대시보드" },
       { href: "/dentist/quotation-requests/available", label: "견적 요청" },
       { href: "/dentist/quotations/submitted", label: "작성한 견적서" },
+      { href: "/dentist/chat", label: "상담 문의" },
       { href: "/dentist/appointments", label: "상담 일정" },
       { href: "/dentist/clinic-settings", label: "병원 설정" },
     );

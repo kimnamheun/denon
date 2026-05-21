@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StartChatButton } from "@/components/chat/start-chat-button";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   PENDING: { label: "검토 중", className: "bg-blue-100 text-blue-700" },
@@ -63,10 +64,17 @@ export default async function DentistQuotationDetailPage({
                 작성 · 환자 {q.request.patient.user.name}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end gap-2 shrink-0">
               <span className={`text-xs px-2 py-1 rounded-full ${status.className}`}>
                 {status.label}
               </span>
+              <StartChatButton
+                quotationId={q.id}
+                basePath="/dentist/chat"
+                label="환자와 상담"
+                size="default"
+                variant="outline"
+              />
               {(q.status === "PENDING" || q.status === "DRAFT") && (
                 <Link href={`/dentist/quotations/${q.id}/edit`}>
                   <Button variant="outline" size="sm">수정</Button>
