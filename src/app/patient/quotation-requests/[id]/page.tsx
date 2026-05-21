@@ -61,9 +61,15 @@ export default async function QuotationRequestDetailPage({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>견적 요청 #{request.id.slice(0, 8)}</CardTitle>
+              <CardTitle>견적 요청</CardTitle>
               <CardDescription>
-                작성일: {new Date(request.createdAt).toLocaleString("ko-KR")}
+                {new Date(request.createdAt).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "long",
+                })}{" "}
+                작성 · 치아 {request.missingTeeth.length}개
               </CardDescription>
             </div>
             <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
