@@ -52,10 +52,15 @@ export default async function DentistQuotationDetailPage({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>견적서 #{q.id.slice(0, 8)}</CardTitle>
+              <CardTitle>견적서</CardTitle>
               <CardDescription>
-                환자: {q.request.patient.user.name} · 작성일:{" "}
-                {new Date(q.createdAt).toLocaleDateString("ko-KR")}
+                {new Date(q.createdAt).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "long",
+                })}{" "}
+                작성 · 환자 {q.request.patient.user.name}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
