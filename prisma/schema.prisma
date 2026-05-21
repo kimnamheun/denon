@@ -489,6 +489,13 @@ model ChatRoom {
   lastMessageAt      DateTime? @map("last_message_at")
   lastMessagePreview String?   @map("last_message_preview") @db.VarChar(100)
 
+  // 마지막 typing ping 시각 (상대 polling 으로 입력 중 표시)
+  patientTypingAt DateTime? @map("patient_typing_at")
+  dentistTypingAt DateTime? @map("dentist_typing_at")
+
+  // 마지막 미읽음 알림 이메일 발송 시각 (중복 발송 방지)
+  lastEmailNotifiedAt DateTime? @map("last_email_notified_at")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -505,18 +512,26 @@ model ChatRoom {
 }
 
 model ChatMessage {
-  id         String    @id @default(cuid())
-  roomId     String    @map("room_id")
-  senderId   String    @map("sender_id")
-  senderRole UserRole  @map("sender_role")
-  content    String    @db.Text
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  senderId   String   @map("sender_id")
+  senderRole UserRole @map("sender_role")
+  content    String   @db.Text
+  // 이미지 첨부 (선택)
+  imageUrl   String?  @map("image_url")
+
   // null 이면 미읽음. 상대방이 방에 들어와 GET 할 때 일괄 readAt = now() 처리.
-  readAt     DateTime? @map("read_at")
+  readAt   DateTime? @map("read_at")
+  // 핀 (즐겨찾기) 시각 — null 이면 핀 안됨
+  pinnedAt DateTime? @map("pinned_at")
+  // 소프트 삭제 — UI 에서는 "삭제된 메시지입니다" 로 표시
+  deletedAt DateTime? @map("deleted_at")
 
   createdAt DateTime @default(now()) @map("created_at")
 
   room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId, createdAt])
+  @@index([roomId, pinnedAt])
   @@map("chat_messages")
 }

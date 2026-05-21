@@ -54,6 +54,30 @@ export async function sendMail(opts: MailOptions): Promise<void> {
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+/** 읽지 않은 채팅 메시지 알림 (cron 으로 주기적 발송) */
+export async function sendUnreadChatEmail(opts: {
+  to: string;
+  recipientName: string;
+  senderName: string;
+  unreadCount: number;
+  preview: string;
+  roomLink: string;
+}) {
+  await sendMail({
+    to: opts.to,
+    subject: `[임플란트 플랫폼] ${opts.senderName} 님으로부터 새 메시지 ${opts.unreadCount}건`,
+    html: `
+      <h2>${opts.recipientName}님, 새 메시지가 있어요</h2>
+      <p><strong>${opts.senderName}</strong> 님께서 보내신 읽지 않은 메시지가 <strong>${opts.unreadCount}건</strong> 있습니다.</p>
+      <blockquote style="border-left: 4px solid #ddd; padding-left: 12px; color: #555;">
+        ${opts.preview}
+      </blockquote>
+      <p><a href="${opts.roomLink}">채팅에서 확인하기 →</a></p>
+      <p style="color: #999; font-size: 12px;">본 채팅은 일반 상담 문의 용도이며, 정확한 진단·치료는 의료기관 방문 후 상담하시기 바랍니다.</p>
+    `,
+  });
+}
+
 export async function sendWelcomeEmail(opts: {
   to: string;
   name: string;

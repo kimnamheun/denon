@@ -80,6 +80,37 @@ export async function GET() {
         at: c.scheduledAt.toISOString(),
       });
     }
+    // 채팅: 의사가 보낸 미읽음 메시지가 있는 방
+    const unreadChatRooms = await prisma.chatRoom.findMany({
+      where: {
+        patientId: session.user.id,
+        deletedAt: null,
+        messages: { some: { senderRole: "DENTIST", readAt: null, deletedAt: null } },
+      },
+      select: {
+        id: true,
+        lastMessageAt: true,
+        lastMessagePreview: true,
+        dentist: {
+          include: {
+            user: { select: { name: true } },
+            clinic: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { lastMessageAt: "desc" },
+      take: 5,
+    });
+    for (const r of unreadChatRooms) {
+      items.push({
+        id: `chat-${r.id}`,
+        type: "CHAT",
+        title: `💬 ${r.dentist.user.name} 의사선생님 답변`,
+        desc: r.lastMessagePreview ?? r.dentist.clinic?.name ?? "새 메시지",
+        href: `/patient/chat/${r.id}`,
+        at: (r.lastMessageAt ?? new Date()).toISOString(),
+      });
+    }
   } else if (session.user.role === "DENTIST") {
     const [openRequests, acceptedQuotations] = await Promise.all([
       prisma.quotationRequest.findMany({
@@ -129,6 +160,32 @@ export async function GET() {
         desc: `${q.request.patient.user.name} 님이 견적을 수락하셨습니다`,
         href: `/dentist/quotations/${q.id}`,
         at: q.updatedAt.toISOString(),
+      });
+    }
+    // 채팅: 환자가 보낸 미읽음 메시지가 있는 방
+    const unreadChatRoomsForDentist = await prisma.chatRoom.findMany({
+      where: {
+        dentistId: session.user.id,
+        deletedAt: null,
+        messages: { some: { senderRole: "PATIENT", readAt: null, deletedAt: null } },
+      },
+      select: {
+        id: true,
+        lastMessageAt: true,
+        lastMessagePreview: true,
+        patient: { include: { user: { select: { name: true } } } },
+      },
+      orderBy: { lastMessageAt: "desc" },
+      take: 5,
+    });
+    for (const r of unreadChatRoomsForDentist) {
+      items.push({
+        id: `chat-${r.id}`,
+        type: "CHAT",
+        title: `💬 환자 ${r.patient.user.name} 님 문의`,
+        desc: r.lastMessagePreview ?? "새 메시지",
+        href: `/dentist/chat/${r.id}`,
+        at: (r.lastMessageAt ?? new Date()).toISOString(),
       });
     }
   } else if (session.user.role === "ADMIN") {
