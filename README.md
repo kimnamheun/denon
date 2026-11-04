@@ -168,10 +168,11 @@ dental-nextjs/
 
 | 경로 | 주기 (UTC) | 하는 일 |
 |---|---|---|
-| `/api/cron/unread-chat` | 2시간마다 | 5분 넘게 안 읽은 채팅 메일 알림 (방마다 1시간에 1번) |
+| `/api/cron/unread-chat` | 매일 00:00 (서울 09:00) | 5분 넘게 안 읽은 채팅 메일 알림 (방마다 1시간에 1번) |
 | `/api/cron/expire` | 매일 15:05 (서울 00:05) | 기간 지난 OPEN 견적 요청 → EXPIRED, 남은 PENDING 견적서와 유효기간 지난 견적서 → EXPIRED (이력 기록) |
 
 - 두 cron 모두 `Authorization: Bearer <CRON_SECRET>` 로만 통과한다 (User-Agent 는 인증 근거가 아니다).
+- Vercel Hobby 요금제는 cron 을 하루 1번까지만 허용해서 두 cron 모두 하루 1번이다. 더 자주 돌리려면 Pro 요금제나 외부 스케줄러(GitHub Actions 등)로 같은 주소를 `CRON_SECRET` 과 함께 호출한다.
 - 새 견적 요청은 만든 날로부터 30일 뒤를 `expiresAt` 으로 저장한다. `expiresAt` 이 비어 있는 예전 요청은 자동 만료하지 않는다.
 
 ## 다음 작업 단계 (TODO)
