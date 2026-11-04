@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getDentistAccess } from "@/lib/dentist-access";
+import { VerificationPending } from "@/components/dentist/verification-pending";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const URGENCY_BADGE: Record<string, string> = {
@@ -19,6 +21,16 @@ const URGENCY_LABEL: Record<string, string> = {
 export default async function AvailableRequestsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "DENTIST") return null;
+
+  const access = await getDentistAccess(session.user.id);
+  if (!access.isVerified) {
+    return (
+      <main className="container max-w-5xl py-10">
+        <h1 className="text-3xl font-bold mb-6">견적 요청 목록</h1>
+        <VerificationPending />
+      </main>
+    );
+  }
 
   // 본인이 이미 견적서를 낸 요청은 제외
   const requests = await prisma.quotationRequest.findMany({

@@ -25,7 +25,7 @@ export async function GET(_req: Request, { params }: RouteCtx) {
           symptoms: true,
           urgency: true,
           missingTeeth: true,
-          patient: { include: { user: { select: { name: true } } } },
+          patient: { select: { user: { select: { name: true } } } },
         },
       },
       dentist: { include: { user: { select: { name: true } } } },

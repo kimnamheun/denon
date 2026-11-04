@@ -51,11 +51,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             password: true,
             role: true,
             status: true,
+            deletedAt: true,
           },
         });
 
         if (!user || !user.password) return null;
-        if (user.status !== "ACTIVE") return null;
+        if (user.status !== "ACTIVE" || user.deletedAt) return null;
 
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) return null;
@@ -71,11 +72,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // 로그인 시점에만 user 가 채워짐 → token 에 role/id 영구 보관
+      // 로그인 시점에만 user 가 채워짐 → token 에 role/id 보관
       if (user) {
         token.id = user.id as string;
         token.role = user.role as UserRole;
+        return token;
       }
+
+      // 이후 요청마다 회원 상태를 다시 확인한다 — 관리자가 정지(SUSPENDED)·비활성 처리하거나
+      // 탈퇴(deletedAt)하면 토큰이 남아 있어도 바로 로그아웃 상태가 된다.
+      // 미들웨어(edge 런타임)에서는 DB 를 못 쓰므로 건너뛰고, API·서버 컴포넌트(node)에서 막는다.
+      if (process.env.NEXT_RUNTIME === "edge" || !token.id) return token;
+      const current = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { status: true, role: true, deletedAt: true },
+      });
+      if (!current || current.status !== "ACTIVE" || current.deletedAt) return null;
+      token.role = current.role;
       return token;
     },
     async session({ session, token }) {

@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: RouteCtx) {
   const c = await prisma.consultation.findUnique({
     where: { id: params.id },
     include: {
-      patient: { include: { user: { select: { name: true, email: true, phoneNumber: true } } } },
+      patient: { select: { user: { select: { name: true, email: true, phoneNumber: true } } } },
       dentist: { include: { user: { select: { name: true } } } },
       clinic: true,
       quotation: { select: { id: true, finalAmount: true } },

@@ -4,6 +4,7 @@
 import "dotenv/config";
 import { PrismaClient, type Urgency } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 
 const prisma = new PrismaClient();
 
@@ -166,7 +167,11 @@ async function main() {
   console.log("🌱 시딩 시작...\n");
 
   const hashedPw = await bcrypt.hash("test1234", 10);
-  const adminPw = await bcrypt.hash("admin1234", 10);
+  // 관리자 비밀번호는 고정값을 쓰지 않는다 — SEED_ADMIN_PASSWORD 가 없으면 매번 새로 만들어
+  // 이번 실행 콘솔에만 한 번 보여준다. (이미 있는 관리자 계정은 upsert update: {} 라 바뀌지 않는다)
+  const adminPlain = process.env.SEED_ADMIN_PASSWORD || randomBytes(12).toString("base64url");
+  const adminPwGenerated = !process.env.SEED_ADMIN_PASSWORD;
+  const adminPw = await bcrypt.hash(adminPlain, 10);
 
   // ========== 1. 기본 테스트 계정 ==========
   const mainPatient = await prisma.user.upsert({
@@ -255,6 +260,10 @@ async function main() {
   });
   console.log(`✅ 기본 의사: ${mainDentist.email}`);
 
+  const adminExisted = await prisma.user.findUnique({
+    where: { email: "admin@test.com" },
+    select: { id: true },
+  });
   const admin = await prisma.user.upsert({
     where: { email: "admin@test.com" },
     update: {},
@@ -269,6 +278,12 @@ async function main() {
     select: { id: true, email: true },
   });
   console.log(`✅ 관리자: ${admin.email}`);
+  if (!adminExisted && adminPwGenerated) {
+    console.log("   관리자 비밀번호 (이번에만 표시 — 지금 저장해 두세요):");
+    console.log(`   ${adminPlain}`);
+  } else if (adminExisted) {
+    console.log("   (기존 관리자 계정 — 비밀번호는 바꾸지 않았습니다)");
+  }
 
   // ========== 2. 더미 병원 5곳 ==========
   console.log("\n🏥 더미 병원 생성...");

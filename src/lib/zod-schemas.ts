@@ -111,7 +111,7 @@ export const consultationCreateSchema = z.object({
   clinicId: z.string().min(1),
   quotationId: z.string().optional(),
   scheduledAt: z.string().datetime(),
-  duration: z.number().int().positive().default(60),
+  duration: z.number().int().positive().max(8 * 60).default(60),
   notes: z.string().optional(),
 });
 export type ConsultationCreateInput = z.infer<typeof consultationCreateSchema>;

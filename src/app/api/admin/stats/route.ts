@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { kstEndOfDay, kstStartOfDay } from "@/lib/kst";
 
 export async function GET() {
   const session = await auth();
@@ -34,8 +35,8 @@ export async function GET() {
     prisma.consultation.count({
       where: {
         scheduledAt: {
-          gte: startOfDay(),
-          lt: endOfDay(),
+          gte: kstStartOfDay(),
+          lt: kstEndOfDay(),
         },
       },
     }),
@@ -52,16 +53,4 @@ export async function GET() {
     pendingQuotations,
     todayConsultations,
   });
-}
-
-function startOfDay() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfDay() {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d;
 }

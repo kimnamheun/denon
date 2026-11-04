@@ -3,6 +3,14 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { maskName } from "@/lib/anonymize";
+import { toViewUrls } from "@/lib/s3";
+import {
+  canDentistSeePatientName,
+  canDentistViewRequest,
+  getDentistAccess,
+} from "@/lib/dentist-access";
+import { VerificationPending } from "@/components/dentist/verification-pending";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -25,10 +33,10 @@ export default async function DentistRequestViewPage({
     include: {
       missingTeeth: true,
       photos: { orderBy: { displayOrder: "asc" } },
-      patient: { include: { user: { select: { name: true } } } },
+      patient: { select: { sido: true, sigungu: true, user: { select: { name: true } } } },
       quotations: {
         where: { dentistId: session.user.id, deletedAt: null },
-        select: { id: true },
+        select: { id: true, status: true },
       },
     },
   });
@@ -36,6 +44,23 @@ export default async function DentistRequestViewPage({
   if (!request) notFound();
 
   const alreadyQuoted = request.quotations.length > 0;
+  const access = await getDentistAccess(session.user.id);
+  if (!canDentistViewRequest({ isVerified: access.isVerified, requestStatus: request.status, hasOwnQuotation: alreadyQuoted })) {
+    if (!access.isVerified) {
+      return (
+        <main className="container max-w-3xl py-10">
+          <VerificationPending />
+        </main>
+      );
+    }
+    notFound();
+  }
+  // 환자 실명은 내 견적서가 수락된 뒤에만, 그 전에는 가린 이름 + 시/구까지만
+  const patientName = canDentistSeePatientName(request.quotations[0]?.status)
+    ? request.patient.user.name
+    : maskName(request.patient.user.name);
+  const patientRegion = [request.patient.sido, request.patient.sigungu].filter(Boolean).join(" ");
+  const photoViewUrls = await toViewUrls(request.photos.map((p) => p.photoUrl));
   const isOpen = request.status === "OPEN";
 
   const formatWon = (n: bigint | null) =>
@@ -53,7 +78,8 @@ export default async function DentistRequestViewPage({
             치아 {request.missingTeeth.length}개 임플란트 견적 요청
           </CardTitle>
           <CardDescription>
-            요청일: {new Date(request.createdAt).toLocaleString("ko-KR")} · 환자: {request.patient.user.name}
+            요청일: {new Date(request.createdAt).toLocaleString("ko-KR")} · 환자: {patientName}
+            {patientRegion && ` (${patientRegion})`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-base">
@@ -74,9 +100,9 @@ export default async function DentistRequestViewPage({
             <div>
               <div className="font-medium mb-2">첨부 사진</div>
               <div className="grid grid-cols-3 gap-2">
-                {request.photos.map((p) => (
+                {request.photos.map((p, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={p.id} src={p.photoUrl} alt="첨부" className="w-full h-32 object-cover rounded" />
+                  <img key={p.id} src={photoViewUrls[i]} alt="첨부" className="w-full h-32 object-cover rounded" />
                 ))}
               </div>
             </div>

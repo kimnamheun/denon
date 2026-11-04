@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
         },
         select: { id: true, email: true, name: true, role: true },
       });
-      void sendWelcomeEmail({ to: user.email, name: user.name, role: "PATIENT" });
+      waitUntil(sendWelcomeEmail({ to: user.email, name: user.name, role: "PATIENT" }));
       return NextResponse.json(user, { status: 201 });
     }
 
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
       },
       select: { id: true, email: true, name: true, role: true },
     });
-    void sendWelcomeEmail({ to: user.email, name: user.name, role: "DENTIST" });
+    waitUntil(sendWelcomeEmail({ to: user.email, name: user.name, role: "DENTIST" }));
     return NextResponse.json(user, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {

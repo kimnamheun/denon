@@ -8,6 +8,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { quotationRequestSchema } from "@/lib/zod-schemas";
+import { maskName } from "@/lib/anonymize";
+import {
+  canDentistSeePatientName,
+  canDentistViewRequest,
+  getDentistAccess,
+  notVerifiedResponse,
+} from "@/lib/dentist-access";
+import { isOwnUpload, toViewUrls } from "@/lib/s3";
 
 type RouteCtx = { params: { id: string } };
 
@@ -18,7 +26,7 @@ export async function GET(_req: Request, { params }: RouteCtx) {
   const request = await prisma.quotationRequest.findUnique({
     where: { id: params.id, deletedAt: null },
     include: {
-      patient: { include: { user: { select: { name: true, email: true } } } },
+      patient: { select: { sido: true, sigungu: true, user: { select: { name: true } } } },
       missingTeeth: true,
       photos: { orderBy: { displayOrder: "asc" } },
       quotations: {
@@ -34,14 +42,46 @@ export async function GET(_req: Request, { params }: RouteCtx) {
 
   if (!request) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
-  // 권한: 작성자(환자) 또는 모든 치과는 OPEN 인 요청 조회 가능
-  const isOwner = session.user.id === request.patientId;
-  const canView =
-    isOwner || (session.user.role === "DENTIST" && request.status === "OPEN");
+  const photos = await signPhotos(request.photos);
 
-  if (!canView) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  // 작성자(환자) 본인 — 받은 견적서 전체를 본다
+  if (session.user.id === request.patientId) {
+    return NextResponse.json({
+      ...serializeRequest(request),
+      photos,
+      quotations: request.quotations.map(serializeQuotationAmounts),
+    });
+  }
 
-  return NextResponse.json(serializeRequest(request));
+  if (session.user.role !== "DENTIST") {
+    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  }
+
+  // 의사 — 면허 인증 + OPEN 요청이거나, 이미 견적서를 낸 요청만.
+  // 다른 병원 견적서(가격)는 보이지 않게 내 견적서만 남기고, 환자 이름은 수락 전까지 가린다.
+  const own = request.quotations.filter((q) => q.dentistId === session.user.id);
+  const access = await getDentistAccess(session.user.id);
+  const canView = canDentistViewRequest({
+    isVerified: access.isVerified,
+    requestStatus: request.status,
+    hasOwnQuotation: own.length > 0,
+  });
+  if (!canView) {
+    return access.isVerified
+      ? NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
+      : notVerifiedResponse();
+  }
+
+  const showName = canDentistSeePatientName(own[0]?.status);
+  return NextResponse.json({
+    ...serializeRequest(request),
+    photos,
+    patient: {
+      ...request.patient,
+      user: { name: showName ? request.patient.user.name : maskName(request.patient.user.name) },
+    },
+    quotations: own.map(serializeQuotationAmounts),
+  });
 }
 
 export async function PATCH(req: Request, { params }: RouteCtx) {
@@ -73,6 +113,13 @@ export async function PATCH(req: Request, { params }: RouteCtx) {
   }
 
   const data = parsed.data;
+  // 사진은 본인이 이 서비스로 올린 파일만 허용
+  if (data.photoUrls?.some((u) => !isOwnUpload(u, session.user.id))) {
+    return NextResponse.json(
+      { error: "INVALID_PHOTO", message: "직접 올린 사진만 첨부할 수 있습니다" },
+      { status: 400 },
+    );
+  }
   const updated = await prisma.$transaction(async (tx) => {
     if (data.missingTeeth !== undefined) {
       await tx.quotationRequestMissingTooth.deleteMany({ where: { requestId: params.id } });
@@ -113,7 +160,7 @@ export async function PATCH(req: Request, { params }: RouteCtx) {
     });
   });
 
-  return NextResponse.json(serializeRequest(updated));
+  return NextResponse.json({ ...serializeRequest(updated), photos: await signPhotos(updated.photos) });
 }
 
 export async function DELETE(_req: Request, { params }: RouteCtx) {
@@ -134,6 +181,31 @@ export async function DELETE(_req: Request, { params }: RouteCtx) {
     data: { deletedAt: new Date(), status: "CLOSED" },
   });
   return NextResponse.json({ ok: true });
+}
+
+async function signPhotos<T extends { photoUrl: string }>(photos: T[]): Promise<T[]> {
+  const urls = await toViewUrls(photos.map((p) => p.photoUrl));
+  return photos.map((p, i) => ({ ...p, photoUrl: urls[i] }));
+}
+
+// 견적서 금액(BigInt) → 문자열
+function serializeQuotationAmounts<
+  T extends {
+    implantTotalAmount: bigint;
+    additionalTotalAmount: bigint;
+    totalAmount: bigint;
+    discountAmount: bigint;
+    finalAmount: bigint;
+  },
+>(q: T) {
+  return {
+    ...q,
+    implantTotalAmount: q.implantTotalAmount.toString(),
+    additionalTotalAmount: q.additionalTotalAmount.toString(),
+    totalAmount: q.totalAmount.toString(),
+    discountAmount: q.discountAmount.toString(),
+    finalAmount: q.finalAmount.toString(),
+  };
 }
 
 function serializeRequest<T extends { minBudget?: bigint | null; maxBudget?: bigint | null }>(

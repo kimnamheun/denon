@@ -69,6 +69,7 @@ function NewQuotationForm() {
   const [treatmentTags, setTreatmentTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // 선택된 시술 태그 라벨 (요약 표시 + 합치기용)
   const treatmentTagLabels = useMemo(() => {
@@ -80,7 +81,13 @@ function NewQuotationForm() {
   useEffect(() => {
     if (!requestId) return;
     void fetch(`/api/quotation-requests/${requestId}`)
-      .then((r) => (r.ok ? r.json() : null))
+      .then(async (r) => {
+        if (r.ok) return r.json();
+        // 면허 미인증·마감 요청 등 — 서버 메시지를 그대로 보여준다
+        const d = await r.json().catch(() => ({}));
+        setLoadError(d.message ?? "견적 요청을 불러오지 못했습니다");
+        return null;
+      })
       .then((data: RequestData | null) => {
         if (data) {
           setRequestData(data);
@@ -211,6 +218,15 @@ function NewQuotationForm() {
     return (
       <main className="container py-10">
         <p className="text-destructive">견적 요청 ID가 필요합니다.</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="container max-w-3xl py-10">
+        <h1 className="text-3xl font-bold mb-4">견적서 작성</h1>
+        <p className="rounded-lg bg-destructive/10 px-4 py-3 text-lg text-destructive">{loadError}</p>
       </main>
     );
   }

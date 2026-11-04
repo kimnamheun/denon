@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getDentistAccess } from "@/lib/dentist-access";
 
 interface NotificationItem {
   id: string;
@@ -112,8 +113,10 @@ export async function GET() {
       });
     }
   } else if (session.user.role === "DENTIST") {
+    // 면허 인증 전에는 신규 견적 요청 알림을 띄우지 않는다
+    const { isVerified } = await getDentistAccess(session.user.id);
     const [openRequests, acceptedQuotations] = await Promise.all([
-      prisma.quotationRequest.findMany({
+      !isVerified ? Promise.resolve([]) : prisma.quotationRequest.findMany({
         where: {
           status: "OPEN",
           deletedAt: null,
@@ -134,7 +137,7 @@ export async function GET() {
           id: true,
           updatedAt: true,
           request: {
-            select: { patient: { include: { user: { select: { name: true } } } } },
+            select: { patient: { select: { user: { select: { name: true } } } } },
           },
         },
         orderBy: { updatedAt: "desc" },
@@ -173,7 +176,7 @@ export async function GET() {
         id: true,
         lastMessageAt: true,
         lastMessagePreview: true,
-        patient: { include: { user: { select: { name: true } } } },
+        patient: { select: { user: { select: { name: true } } } },
       },
       orderBy: { lastMessageAt: "desc" },
       take: 5,

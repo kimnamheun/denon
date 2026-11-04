@@ -3,10 +3,15 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { waitUntil } from "@vercel/functions";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendQuotationAcceptedEmail } from "@/lib/mailer";
+import { isDbDateBeforeToday } from "@/lib/kst";
+
+/** 트랜잭션 안에서 상태가 이미 바뀐 것을 발견했을 때 */
+class StateConflict extends Error {}
 
 const bodySchema = z.object({
   action: z.enum(["ACCEPT", "REJECT"]),
@@ -34,6 +39,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     select: {
       id: true,
       status: true,
+      validUntil: true,
       quotationRequestId: true,
       request: { select: { patientId: true } },
     },
@@ -52,62 +58,87 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const { action, reason } = parsed.data;
   const newStatus = action === "ACCEPT" ? "ACCEPTED" : "REJECTED";
 
-  await prisma.$transaction(async (tx) => {
-    await tx.quotation.update({
-      where: { id: q.id },
-      data: { status: newStatus },
-    });
-    await tx.quotationStatusHistory.create({
-      data: {
-        quotationId: q.id,
-        oldStatus: "PENDING",
-        newStatus,
-        changedById: session.user.id,
-        changeReason: reason,
-      },
-    });
-    // 수락 시: 같은 요청의 다른 견적서는 REJECTED 처리 + 요청 CLOSE
-    if (action === "ACCEPT") {
-      const otherQs = await tx.quotation.findMany({
-        where: {
-          quotationRequestId: q.quotationRequestId,
-          id: { not: q.id },
-          status: "PENDING",
-          deletedAt: null,
-        },
-        select: { id: true },
+  // 유효기간(서울 기준 날짜)이 지난 견적서는 수락할 수 없다
+  if (action === "ACCEPT" && isDbDateBeforeToday(q.validUntil)) {
+    return NextResponse.json(
+      { error: "EXPIRED", message: "유효기간이 지난 견적서입니다" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 상태 조건을 걸고 바꿔서, 동시에 두 견적서를 수락하는 경우를 막는다
+      const changed = await tx.quotation.updateMany({
+        where: { id: q.id, status: "PENDING", deletedAt: null },
+        data: { status: newStatus },
       });
-      if (otherQs.length > 0) {
-        await tx.quotation.updateMany({
-          where: { id: { in: otherQs.map((x) => x.id) } },
-          data: { status: "REJECTED" },
+      if (changed.count !== 1) throw new StateConflict();
+
+      if (action === "ACCEPT") {
+        const reqChanged = await tx.quotationRequest.updateMany({
+          where: { id: q.quotationRequestId, status: "OPEN", deletedAt: null },
+          data: { status: "IN_PROGRESS" },
         });
-        await tx.quotationStatusHistory.createMany({
-          data: otherQs.map((x) => ({
-            quotationId: x.id,
-            oldStatus: "PENDING" as const,
-            newStatus: "REJECTED" as const,
-            changedById: session.user.id,
-            changeReason: "다른 견적서가 선택됨",
-          })),
-        });
+        if (reqChanged.count !== 1) throw new StateConflict();
       }
-      await tx.quotationRequest.update({
-        where: { id: q.quotationRequestId },
-        data: { status: "IN_PROGRESS" },
+
+      await tx.quotationStatusHistory.create({
+        data: {
+          quotationId: q.id,
+          oldStatus: "PENDING",
+          newStatus,
+          changedById: session.user.id,
+          changeReason: reason,
+        },
       });
+      // 수락 시: 같은 요청의 다른 견적서는 REJECTED 처리
+      if (action === "ACCEPT") {
+        const otherQs = await tx.quotation.findMany({
+          where: {
+            quotationRequestId: q.quotationRequestId,
+            id: { not: q.id },
+            status: "PENDING",
+            deletedAt: null,
+          },
+          select: { id: true },
+        });
+        if (otherQs.length > 0) {
+          await tx.quotation.updateMany({
+            where: { id: { in: otherQs.map((x) => x.id) }, status: "PENDING" },
+            data: { status: "REJECTED" },
+          });
+          await tx.quotationStatusHistory.createMany({
+            data: otherQs.map((x) => ({
+              quotationId: x.id,
+              oldStatus: "PENDING" as const,
+              newStatus: "REJECTED" as const,
+              changedById: session.user.id,
+              changeReason: "다른 견적서가 선택됨",
+            })),
+          });
+        }
+      }
+    });
+  } catch (err) {
+    if (err instanceof StateConflict) {
+      return NextResponse.json(
+        { error: "INVALID_STATE", message: "이미 처리된 견적서이거나 마감된 요청입니다" },
+        { status: 409 },
+      );
     }
-  });
+    throw err;
+  }
 
   // 수락 알림 (치과에게)
   if (action === "ACCEPT") {
-    void (async () => {
+    waitUntil((async () => {
       try {
         const detail = await prisma.quotation.findUnique({
           where: { id: q.id },
           include: {
             dentist: { include: { user: { select: { email: true, name: true } } } },
-            request: { include: { patient: { include: { user: { select: { name: true } } } } } },
+            request: { include: { patient: { select: { user: { select: { name: true } } } } } },
           },
         });
         if (detail?.dentist.user.email) {
@@ -121,7 +152,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       } catch (e) {
         console.error("[notify] 견적 수락 메일 실패:", e);
       }
-    })();
+    })());
   }
 
   return NextResponse.json({ ok: true, status: newStatus });

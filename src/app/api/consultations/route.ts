@@ -3,10 +3,12 @@
 // POST /api/consultations         — 환자만 생성
 
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { consultationCreateSchema } from "@/lib/zod-schemas";
+import { findOverlap, MAX_CONSULTATION_MINUTES } from "@/lib/schedule";
 import { sendConsultationBookedEmail } from "@/lib/mailer";
 
 export async function GET() {
@@ -29,7 +31,7 @@ export async function GET() {
     const list = await prisma.consultation.findMany({
       where: { dentistId: session.user.id },
       include: {
-        patient: { include: { user: { select: { name: true } } } },
+        patient: { select: { user: { select: { name: true } } } },
       },
       orderBy: { scheduledAt: "desc" },
     });
@@ -69,21 +71,57 @@ export async function POST(req: Request) {
     );
   }
 
+  // 지난 시각으로는 예약할 수 없다
+  const scheduledAt = new Date(data.scheduledAt);
+  if (scheduledAt.getTime() <= Date.now()) {
+    return NextResponse.json(
+      { error: "PAST_TIME", message: "지난 시각으로는 예약할 수 없습니다" },
+      { status: 400 },
+    );
+  }
+
+  // 의사·환자 각각 같은 시간대에 잡힌 예약이 있으면 거절
+  const candidate = { scheduledAt, duration: data.duration };
+  const windowStart = new Date(scheduledAt.getTime() - MAX_CONSULTATION_MINUTES * 60 * 1000);
+  const windowEnd = new Date(scheduledAt.getTime() + data.duration * 60 * 1000);
+  const nearby = await prisma.consultation.findMany({
+    where: {
+      status: "SCHEDULED",
+      scheduledAt: { gte: windowStart, lt: windowEnd },
+      OR: [{ dentistId: data.dentistId }, { patientId: session.user.id }],
+    },
+    select: { scheduledAt: true, duration: true, dentistId: true, patientId: true },
+  });
+  const dentistClash = findOverlap(candidate, nearby.filter((c) => c.dentistId === data.dentistId));
+  if (dentistClash) {
+    return NextResponse.json(
+      { error: "TIME_TAKEN", message: "그 시간에는 이미 다른 예약이 있습니다. 다른 시간을 골라주세요." },
+      { status: 409 },
+    );
+  }
+  const patientClash = findOverlap(candidate, nearby.filter((c) => c.patientId === session.user.id));
+  if (patientClash) {
+    return NextResponse.json(
+      { error: "PATIENT_TIME_TAKEN", message: "같은 시간에 이미 잡아둔 다른 상담이 있습니다." },
+      { status: 409 },
+    );
+  }
+
   const created = await prisma.consultation.create({
     data: {
       patientId: session.user.id,
       dentistId: data.dentistId,
       clinicId: data.clinicId,
       quotationId: data.quotationId,
-      scheduledAt: new Date(data.scheduledAt),
+      scheduledAt,
       duration: data.duration,
       notes: data.notes,
       status: "SCHEDULED",
     },
   });
 
-  // 양쪽에 예약 확정 알림 (fire-and-forget)
-  void (async () => {
+  // 양쪽에 예약 확정 알림 — waitUntil 로 응답 후에도 끝까지 실행
+  waitUntil((async () => {
     try {
       const detail = await prisma.consultation.findUnique({
         where: { id: created.id },
@@ -119,7 +157,7 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[notify] 예약 메일 실패:", e);
     }
-  })();
+  })());
 
   return NextResponse.json(created, { status: 201 });
 }

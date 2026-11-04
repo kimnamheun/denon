@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { isOwnUpload, toViewUrl } from "@/lib/s3";
 
 interface Params {
   params: { id: string };
@@ -67,10 +68,19 @@ export async function GET(req: Request, { params }: Params) {
   const otherTyping =
     !!otherTypingAt && Date.now() - new Date(otherTypingAt).getTime() < TYPING_ACTIVE_MS;
 
+  // 삭제된 메시지는 내용을 내려보내지 않는다. 이미지는 보기용 서명 URL 로 바꾼다.
+  const safeMessages = await Promise.all(
+    messages.map(async (m) =>
+      m.deletedAt
+        ? { ...m, content: "", imageUrl: null }
+        : { ...m, imageUrl: await toViewUrl(m.imageUrl) },
+    ),
+  );
+
   return NextResponse.json({
     roomId: params.id,
     myRole: session.user.role,
-    messages,
+    messages: safeMessages,
     otherTyping,
   });
 }
@@ -96,6 +106,13 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "EMPTY_CONTENT" }, { status: 400 });
   }
   if (content.length > 2000) return NextResponse.json({ error: "TOO_LONG" }, { status: 400 });
+  // 이미지는 본인이 이 서비스로 올린 파일만 허용 (외부 URL·남의 파일 차단)
+  if (imageUrl && !isOwnUpload(imageUrl, session.user.id)) {
+    return NextResponse.json(
+      { error: "INVALID_IMAGE", message: "직접 올린 사진만 보낼 수 있습니다" },
+      { status: 400 },
+    );
+  }
 
   const role = session.user.role as "PATIENT" | "DENTIST";
   const preview = imageUrl && !content

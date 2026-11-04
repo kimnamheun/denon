@@ -32,7 +32,12 @@ interface ChatRoomProps {
   counterpartSub?: string;
 }
 
-const POLL_INTERVAL_MS = 2000;        // 2초로 단축 (체감 실시간)
+// 폴링 간격 — 대화가 오가는 중엔 3초, 1분 동안 변화가 없으면 10초로 늦춘다.
+// 화면이 가려져 있으면(다른 탭/앱으로 전환) 아예 멈췄다가 돌아오면 바로 다시 불러온다.
+// (실시간 채널로 바꾸기 전까지 서버·DB 호출을 줄이기 위한 조치)
+const POLL_ACTIVE_MS = 3000;
+const POLL_IDLE_MS = 10000;
+const IDLE_AFTER_MS = 60000;
 const TYPING_PING_DEBOUNCE_MS = 1500; // 입력 후 1.5초 한 번씩만 ping
 
 export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomProps) {
@@ -40,7 +45,8 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  // publicUrl = 서버에 보낼 값, viewUrl = 미리보기용 서명 URL
+  const [pendingImage, setPendingImage] = useState<{ publicUrl: string; viewUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
@@ -51,29 +57,59 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const lastTypingPingRef = useRef<number>(0);
+  // 마지막으로 대화에 변화(새 메시지·읽음·입력 중·내 전송)가 있었던 시각
+  const lastActivityRef = useRef<number>(Date.now());
 
   /* ── 메시지 폴링 ────────────────────────────────────── */
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let lastSignature = "";
     const params = new URLSearchParams();
     if (searchQ.trim()) params.set("q", searchQ.trim());
     if (showPinnedOnly) params.set("pinnedOnly", "true");
     const qs = params.toString() ? `?${params.toString()}` : "";
 
-    const load = () => {
-      fetch(`/api/chat/rooms/${roomId}/messages${qs}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d: ChatRoomData | null) => {
-          if (cancelled || !d) return;
-          setData(d);
-        })
-        .catch(() => {});
+    const load = async () => {
+      try {
+        const r = await fetch(`/api/chat/rooms/${roomId}/messages${qs}`);
+        if (!r.ok) return;
+        const d = (await r.json()) as ChatRoomData;
+        if (cancelled) return;
+        const sig = roomSignature(d);
+        if (sig !== lastSignature) {
+          lastSignature = sig;
+          lastActivityRef.current = Date.now();
+        }
+        setData(d);
+      } catch {
+        /* 네트워크 일시 오류 — 다음 주기에 다시 시도 */
+      }
     };
-    load();
-    const interval = setInterval(load, POLL_INTERVAL_MS);
+
+    const schedule = () => {
+      if (cancelled || document.hidden) return; // 가려진 동안은 멈춤 — visibilitychange 가 다시 시작
+      const idle = Date.now() - lastActivityRef.current > IDLE_AFTER_MS;
+      timer = setTimeout(tick, idle ? POLL_IDLE_MS : POLL_ACTIVE_MS);
+    };
+    const tick = async () => {
+      timer = null;
+      await load();
+      schedule();
+    };
+    const onVisibility = () => {
+      if (document.hidden) return;
+      if (timer) clearTimeout(timer);
+      lastActivityRef.current = Date.now();
+      void tick();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    void tick();
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [roomId, searchQ, showPinnedOnly]);
 
@@ -88,6 +124,7 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
     const now = Date.now();
     if (now - lastTypingPingRef.current < TYPING_PING_DEBOUNCE_MS) return;
     lastTypingPingRef.current = now;
+    lastActivityRef.current = now;
     fetch(`/api/chat/rooms/${roomId}/typing`, { method: "POST" }).catch(() => {});
   }
 
@@ -98,8 +135,8 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
     setUploading(true);
     setError(null);
     try {
-      const { publicUrl } = await uploadFile(f);
-      setPendingImage(publicUrl);
+      const { publicUrl, viewUrl } = await uploadFile(f);
+      setPendingImage({ publicUrl, viewUrl });
     } catch (err) {
       setError(err instanceof Error ? err.message : "사진 업로드 실패");
     } finally {
@@ -118,7 +155,7 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
       const res = await fetch(`/api/chat/rooms/${roomId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, imageUrl: pendingImage }),
+        body: JSON.stringify({ content, imageUrl: pendingImage?.publicUrl ?? null }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -127,6 +164,7 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
       }
       setInput("");
       setPendingImage(null);
+      lastActivityRef.current = Date.now();
       // 즉시 polling 새로고침
       const fresh = await fetch(`/api/chat/rooms/${roomId}/messages`).then((r) => r.json());
       setData(fresh);
@@ -392,7 +430,7 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
           {pendingImage && (
             <div className="mb-2 relative inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={pendingImage} alt="첨부 미리보기" className="h-20 rounded-lg object-cover border-2" />
+              <img src={pendingImage.viewUrl} alt="첨부 미리보기" className="h-20 rounded-lg object-cover border-2" />
               <button
                 type="button"
                 onClick={() => setPendingImage(null)}
@@ -455,4 +493,18 @@ export function ChatRoom({ roomId, counterpartName, counterpartSub }: ChatRoomPr
       )}
     </div>
   );
+}
+
+/** 폴링 결과가 바뀌었는지 보는 요약값 — 메시지 수·마지막 메시지·읽음·핀·삭제·입력 중 */
+function roomSignature(d: ChatRoomData): string {
+  const last = d.messages[d.messages.length - 1];
+  let read = 0;
+  let pinned = 0;
+  let deleted = 0;
+  for (const m of d.messages) {
+    if (m.readAt) read++;
+    if (m.pinnedAt) pinned++;
+    if (m.deletedAt) deleted++;
+  }
+  return [d.messages.length, last?.id ?? "", read, pinned, deleted, d.otherTyping ? 1 : 0].join(":");
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { toViewUrls } from "@/lib/s3";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +39,7 @@ export default async function QuotationRequestDetailPage({
 
   if (!request) notFound();
   if (request.patientId !== session.user.id) notFound();
+  const photoViewUrls = await toViewUrls(request.photos.map((p) => p.photoUrl));
 
   const formatWon = (n: bigint | null) =>
     n === null ? "-" : `${n.toLocaleString("ko-KR")}원`;
@@ -95,9 +97,9 @@ export default async function QuotationRequestDetailPage({
             <div>
               <div className="font-medium mb-2">첨부 사진</div>
               <div className="grid grid-cols-3 gap-2">
-                {request.photos.map((p) => (
+                {request.photos.map((p, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={p.id} src={p.photoUrl} alt="첨부" className="w-full h-32 object-cover rounded" />
+                  <img key={p.id} src={photoViewUrls[i]} alt="첨부" className="w-full h-32 object-cover rounded" />
                 ))}
               </div>
             </div>

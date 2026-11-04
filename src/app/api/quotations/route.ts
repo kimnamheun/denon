@@ -4,11 +4,14 @@
 
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { quotationCreateSchema } from "@/lib/zod-schemas";
 import { sendQuotationReceivedEmail } from "@/lib/mailer";
+import { getDentistAccess, notVerifiedResponse } from "@/lib/dentist-access";
+import { isDbDateBeforeToday } from "@/lib/kst";
 
 export async function GET() {
   const session = await auth();
@@ -23,7 +26,7 @@ export async function GET() {
             id: true,
             symptoms: true,
             urgency: true,
-            patient: { include: { user: { select: { name: true } } } },
+            patient: { select: { user: { select: { name: true } } } },
           },
         },
       },
@@ -72,12 +75,10 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
-  // 치과의 소속 병원 확인
-  const dentist = await prisma.dentist.findUnique({
-    where: { id: session.user.id },
-    select: { clinicId: true },
-  });
-  if (!dentist?.clinicId) {
+  // 면허 인증 + 소속 병원 확인
+  const dentist = await getDentistAccess(session.user.id);
+  if (!dentist.isVerified) return notVerifiedResponse();
+  if (!dentist.clinicId) {
     return NextResponse.json(
       { error: "INVALID_STATE", message: "병원 등록 후 견적서 작성이 가능합니다" },
       { status: 400 },
@@ -95,6 +96,15 @@ export async function POST(req: Request) {
   if (request.status !== "OPEN") {
     return NextResponse.json(
       { error: "REQUEST_CLOSED", message: "이미 마감된 요청입니다" },
+      { status: 400 },
+    );
+  }
+
+  // 유효기간은 오늘(서울 기준) 이후여야 한다
+  const validUntil = new Date(`${data.validUntil}T00:00:00.000Z`);
+  if (Number.isNaN(validUntil.getTime()) || isDbDateBeforeToday(validUntil)) {
+    return NextResponse.json(
+      { error: "INVALID_VALID_UNTIL", message: "견적 유효기간은 오늘 이후 날짜로 정해주세요" },
       { status: 400 },
     );
   }
@@ -125,7 +135,7 @@ export async function POST(req: Request) {
         treatmentDuration: data.treatmentDuration,
         warrantyPeriod: data.warrantyPeriod,
         additionalNotes: data.additionalNotes,
-        validUntil: new Date(data.validUntil),
+        validUntil,
         status: "PENDING",
         implantItems: {
           create: data.implantItems.map((it, idx) => ({
@@ -154,8 +164,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // 환자에게 새 견적서 도착 알림 (fire-and-forget)
-    void (async () => {
+    // 환자에게 새 견적서 도착 알림 — 응답은 먼저 보내고, 메일은 waitUntil 로 끝까지 실행
+    // (서버리스는 응답 후 작업이 중간에 끊길 수 있다)
+    waitUntil((async () => {
       try {
         const r = await prisma.quotationRequest.findUnique({
           where: { id: data.quotationRequestId },
@@ -179,7 +190,7 @@ export async function POST(req: Request) {
       } catch (e) {
         console.error("[notify] 견적서 도착 메일 실패:", e);
       }
-    })();
+    })());
 
     return NextResponse.json(serializeQuotation(created), { status: 201 });
   } catch (err) {

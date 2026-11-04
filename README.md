@@ -45,7 +45,8 @@ cp .env.example .env.local
 
 필요한 값:
 - `AUTH_SECRET` — `openssl rand -base64 32` 로 생성
-- `POSTGRES_PRISMA_URL` / `POSTGRES_URL_NON_POOLING` — Vercel Postgres
+- `DATABASE_URL` — PostgreSQL 연결 URL (`prisma/schema.prisma` 가 읽는 유일한 DB 변수)
+- `CRON_SECRET` — Vercel Cron 인증값. 없으면 `/api/cron/*` 이 모두 401
 - `AWS_*` — S3 자격증명
 - `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` — 네이버 클라우드 콘솔에서 발급
 
@@ -134,18 +135,44 @@ dental-nextjs/
 | `@PreAuthorize("hasRole(...)")` | `middleware.ts` + `auth()` 헬퍼 |
 | AWS SDK Java | `@aws-sdk/client-s3` (TypeScript) |
 | Bean validation (`@Valid`) | Zod schemas |
-| Hikari pool | Prisma + Pgbouncer (POSTGRES_PRISMA_URL) |
+| Hikari pool | Prisma (DATABASE_URL) |
 
 ## Vercel 배포
 
 1. GitHub 저장소 push
 2. [Vercel Dashboard](https://vercel.com/new) → Import Project
-3. Storage → Create Database → Postgres → 프로젝트 연결 (자동으로 `POSTGRES_*` 환경변수 주입)
+3. Storage → Create Database → Postgres → 프로젝트 연결 후, 그 연결 URL 을 `DATABASE_URL` 로 등록 (스키마는 `DATABASE_URL` 만 읽는다)
 4. Settings → Environment Variables 에 추가:
    - `AUTH_SECRET`, `AUTH_TRUST_HOST=true`
+   - `CRON_SECRET` (cron 2개가 이 값으로만 인증 — 아래 "운영 보안 규칙" 참고)
    - `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
    - `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`
 5. Deploy → `prisma generate && next build` 자동 실행
+
+## 운영 보안 규칙
+
+환자 견적 요청에는 증상·치료 이력·구강 사진 같은 건강정보가 들어 있다. 아래 규칙은 코드로 강제된다.
+
+| 규칙 | 위치 |
+|---|---|
+| 면허 인증(`Dentist.isVerified`) 전 의사는 견적 요청 목록·상세·사진을 보지 못하고 견적서·채팅을 시작할 수 없다 | `src/lib/dentist-access.ts` |
+| 의사에게 환자는 가린 이름(`김**`) + 시/구까지만. 실명은 그 의사의 견적서가 수락된 뒤에만 | `canDentistSeePatientName` |
+| 의사는 같은 요청에 달린 다른 병원 견적서(가격)를 볼 수 없다 | `api/quotation-requests/[id]` |
+| 사진은 DB 에 버킷 URL 로 저장하고, 화면에는 서명 URL(1시간 단위 고정, 2시간 유효)로만 내보낸다 → 버킷 비공개 가능 | `src/lib/s3.ts` `toViewUrl` |
+| 견적 요청 사진·채팅 이미지는 본인이 이 서비스로 올린 파일만 허용 | `isOwnUpload` |
+| 회원 상태는 요청마다 다시 확인 — 정지·비활성·탈퇴 시 토큰이 남아도 바로 로그아웃 | `src/auth.ts` jwt 콜백 |
+| 날짜 경계(오늘 상담, 유효기간)는 서울 시간 기준 | `src/lib/kst.ts` |
+| 응답 후 메일 발송은 `waitUntil` 로 끝까지 실행 | `@vercel/functions` |
+
+### Cron
+
+| 경로 | 주기 (UTC) | 하는 일 |
+|---|---|---|
+| `/api/cron/unread-chat` | 2시간마다 | 5분 넘게 안 읽은 채팅 메일 알림 (방마다 1시간에 1번) |
+| `/api/cron/expire` | 매일 15:05 (서울 00:05) | 기간 지난 OPEN 견적 요청 → EXPIRED, 남은 PENDING 견적서와 유효기간 지난 견적서 → EXPIRED (이력 기록) |
+
+- 두 cron 모두 `Authorization: Bearer <CRON_SECRET>` 로만 통과한다 (User-Agent 는 인증 근거가 아니다).
+- 새 견적 요청은 만든 날로부터 30일 뒤를 `expiresAt` 으로 저장한다. `expiresAt` 이 비어 있는 예전 요청은 자동 만료하지 않는다.
 
 ## 다음 작업 단계 (TODO)
 
@@ -153,19 +180,24 @@ dental-nextjs/
 - [x] Next.js + shadcn + Prisma + Auth.js 골격
 - [x] 회원가입 (PATIENT, DENTIST), 로그인, 미들웨어
 - [x] 환자/치과 대시보드 placeholder
-- [ ] DB 초기화 + Vercel 배포 검증
+- [x] DB 초기화 + Vercel 배포 검증
 
 ### Phase 2 — 핵심 도메인 기능
-- [ ] 환자: 견적 요청 생성 (사진 업로드, 치아 선택, 증상)
-- [ ] 치과: 견적 요청 조회 + 견적서 작성
-- [ ] 환자: 받은 견적서 비교
-- [ ] 병원 검색 (Naver Maps 통합)
-- [ ] 상담 예약 (캘린더 컴포넌트)
-- [ ] 리뷰 작성
+- [x] 환자: 견적 요청 생성 (사진 업로드, 치아 선택, 증상) — 노년 친화 8단계 입력
+- [x] 치과: 견적 요청 조회 + 견적서 작성
+- [x] 환자: 받은 견적서 비교 + 수락/거절
+- [x] 병원 검색 (Naver Maps 통합)
+- [x] 상담 예약 (시간 겹침·지난 시각 검사)
+- [x] 리뷰 작성
+- [x] 환자 ↔ 의사 채팅 (이미지·핀·검색·입력 중 표시, 미읽음 메일)
 
 ### Phase 3 — 운영 / 부가 기능
-- [ ] Admin 대시보드 (사용자/병원 승인)
-- [ ] 알림 (이메일, FCM)
+- [x] Admin 대시보드 (사용자 상태, 의사 인증, 프리미엄 병원)
+- [x] 알림 — 이메일 + 화면 알림 벨
+- [ ] 푸시 알림 (Web Push 또는 카카오 알림톡)
+- [ ] 채팅 실시간 채널 (지금은 3초/10초 폴링, 화면이 가려지면 멈춤)
+- [ ] 동의 기록 저장 (회원가입 약관·민감정보 동의를 서버에 기록)
+- [ ] PWA (manifest, 서비스워커, 홈 화면 추가)
 - [ ] 결제 통합 (선택)
 - [ ] 검색 필터링 / 정렬
 

@@ -39,7 +39,9 @@ export default function NewQuotationRequestPage() {
 
   const [historyTags, setHistoryTags] = useState<string[]>([]);
 
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  // publicUrl = 서버에 보낼 값, viewUrl = 미리보기용 서명 URL (버킷 비공개여도 열림)
+  const [photos, setPhotos] = useState<{ publicUrl: string; viewUrl: string }[]>([]);
+  const photoUrls = photos.map((p) => p.publicUrl);
   const [uploading, setUploading] = useState(false);
 
   const [urgency, setUrgency] = useState<UrgencyValue>("MEDIUM");
@@ -64,7 +66,10 @@ export default function NewQuotationRequestPage() {
     setError(null);
     try {
       const uploaded = await Promise.all(files.map((f) => uploadFile(f)));
-      setPhotoUrls((prev) => [...prev, ...uploaded.map((u) => u.publicUrl)]);
+      setPhotos((prev) => [
+        ...prev,
+        ...uploaded.map((u) => ({ publicUrl: u.publicUrl, viewUrl: u.viewUrl })),
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "사진 업로드 실패");
     } finally {
@@ -74,7 +79,7 @@ export default function NewQuotationRequestPage() {
   }
 
   function removePhoto(url: string) {
-    setPhotoUrls((prev) => prev.filter((u) => u !== url));
+    setPhotos((prev) => prev.filter((p) => p.publicUrl !== url));
   }
 
   /* ── 제출 ─────────────────────────────────────── */
@@ -260,15 +265,15 @@ export default function NewQuotationRequestPage() {
             업로드 중...
           </p>
         )}
-        {photoUrls.length > 0 && (
+        {photos.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-3">
-            {photoUrls.map((url) => (
-              <div key={url} className="relative">
+            {photos.map((p) => (
+              <div key={p.publicUrl} className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="첨부 사진" className="h-28 w-full rounded-lg object-cover" />
+                <img src={p.viewUrl} alt="첨부 사진" className="h-28 w-full rounded-lg object-cover" />
                 <button
                   type="button"
-                  onClick={() => removePhoto(url)}
+                  onClick={() => removePhoto(p.publicUrl)}
                   className="absolute -top-2 -right-2 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow-md"
                   aria-label="사진 삭제"
                 >

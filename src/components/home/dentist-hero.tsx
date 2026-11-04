@@ -4,6 +4,9 @@ import { TrendingUp, FileText, Calendar, Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { maskName, formatBudgetRange, timeAgo } from "@/lib/anonymize";
+import { getDentistAccess } from "@/lib/dentist-access";
+import { kstEndOfDay, kstStartOfDay } from "@/lib/kst";
+import { VerificationPending } from "@/components/dentist/verification-pending";
 
 interface Props {
   userId: string;
@@ -17,6 +20,13 @@ const URGENCY_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export async function DentistHero({ userId, userName }: Props) {
+  // 면허 인증 전에는 환자 견적 요청(건강정보)을 세지도 보여주지도 않는다
+  const { isVerified } = await getDentistAccess(userId);
+  const openRequestWhere = {
+    status: "OPEN" as const,
+    deletedAt: null,
+    quotations: { none: { dentistId: userId, deletedAt: null } },
+  };
   const [
     availableRequests,
     pendingMyQuotations,
@@ -26,13 +36,7 @@ export async function DentistHero({ userId, userName }: Props) {
     todayAppointments,
   ] = await Promise.all([
     // 본인이 아직 견적 안 낸 OPEN 요청 수
-    prisma.quotationRequest.count({
-      where: {
-        status: "OPEN",
-        deletedAt: null,
-        quotations: { none: { dentistId: userId, deletedAt: null } },
-      },
-    }),
+    isVerified ? prisma.quotationRequest.count({ where: openRequestWhere }) : Promise.resolve(0),
     prisma.quotation.count({
       where: { dentistId: userId, status: "PENDING", deletedAt: null },
     }),
@@ -40,7 +44,7 @@ export async function DentistHero({ userId, userName }: Props) {
       where: {
         dentistId: userId,
         status: "SCHEDULED",
-        scheduledAt: { gte: startOfDay(), lt: endOfDay() },
+        scheduledAt: { gte: kstStartOfDay(), lt: kstEndOfDay() },
       },
     }),
     prisma.review.count({
@@ -51,24 +55,22 @@ export async function DentistHero({ userId, userName }: Props) {
       },
     }),
     // 응답 가능한 신규 요청 6건
-    prisma.quotationRequest.findMany({
-      where: {
-        status: "OPEN",
-        deletedAt: null,
-        quotations: { none: { dentistId: userId, deletedAt: null } },
-      },
-      include: {
-        missingTeeth: true,
-        patient: { include: { user: { select: { name: true } } } },
-      },
-      orderBy: [{ urgency: "desc" }, { createdAt: "desc" }],
-      take: 6,
-    }),
+    isVerified
+      ? prisma.quotationRequest.findMany({
+          where: openRequestWhere,
+          include: {
+            missingTeeth: true,
+            patient: { select: { user: { select: { name: true } } } },
+          },
+          orderBy: [{ urgency: "desc" }, { createdAt: "desc" }],
+          take: 6,
+        })
+      : Promise.resolve([]),
     // 오늘 상담 일정
     prisma.consultation.findMany({
       where: {
         dentistId: userId,
-        scheduledAt: { gte: startOfDay(), lt: endOfDay() },
+        scheduledAt: { gte: kstStartOfDay(), lt: kstEndOfDay() },
       },
       include: {
         patient: { include: { user: { select: { name: true } } } },
@@ -85,6 +87,8 @@ export async function DentistHero({ userId, userName }: Props) {
           <p className="text-base text-muted-foreground">안녕하세요</p>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1">{userName} 원장님</h1>
         </div>
+
+        {!isVerified && <VerificationPending className="mb-6" />}
 
         {/* 통계 카드 4개 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -243,16 +247,6 @@ function StatLink({
   );
 }
 
-function startOfDay() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-function endOfDay() {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
 function weekAgo() {
   const d = new Date();
   d.setDate(d.getDate() - 7);
