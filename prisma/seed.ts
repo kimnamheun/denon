@@ -543,12 +543,63 @@ async function main() {
     });
   }
 
+  // ========== 의사 술식 학습 샘플 과정 (영상 없음 — 관리자 화면에서 영상 주소를 넣는다) ==========
+  console.log("\n🎓 술식 학습 샘플 과정...");
+  const SAMPLE_COURSES: ReadonlyArray<{
+    title: string;
+    summary: string;
+    procedureTags: string[];
+    level: "BASIC" | "INTERMEDIATE" | "ADVANCED";
+    lessons: string[];
+  }> = [
+    {
+      title: "(샘플) 상악동 거상술 — 치조정 접근 기초",
+      summary: "잔존골 높이에 따른 접근법 선택, 치조정 접근의 술식 순서와 막 천공 대처를 다룹니다.",
+      procedureTags: ["sinus", "bone_graft", "ct"],
+      level: "BASIC",
+      lessons: ["CT 로 잔존골 높이 읽기", "치조정 접근 술식 순서", "막 천공 시 대처"],
+    },
+    {
+      title: "(샘플) 발치 즉시 식립 케이스 리뷰",
+      summary: "발치 즉시 식립의 적응증과 초기 고정 확보, 발치와 관리 케이스를 리뷰합니다.",
+      procedureTags: ["extract", "implant"],
+      level: "INTERMEDIATE",
+      lessons: ["적응증과 금기", "초기 고정 확보", "케이스 리뷰"],
+    },
+    {
+      title: "(샘플) 임플란트 보철 — 지대주 선택과 크라운",
+      summary: "지대주 종류별 선택 기준과 크라운 재료 선택, 나사 유지형과 시멘트 유지형을 비교합니다.",
+      procedureTags: ["abutment", "crown"],
+      level: "BASIC",
+      lessons: ["지대주 선택 기준", "크라운 재료와 유지 방식"],
+    },
+  ];
+  for (let i = 0; i < SAMPLE_COURSES.length; i++) {
+    const c = SAMPLE_COURSES[i];
+    const exists = await prisma.course.findFirst({ where: { title: c.title }, select: { id: true } });
+    if (exists) continue;
+    await prisma.course.create({
+      data: {
+        title: c.title,
+        summary: c.summary,
+        procedureTags: c.procedureTags,
+        level: c.level,
+        instructor: "오스템임플란트 교육팀",
+        isPublished: true,
+        displayOrder: i,
+        lessons: {
+          create: c.lessons.map((title, idx) => ({ title, durationMin: 15, displayOrder: idx })),
+        },
+      },
+    });
+  }
+  console.log(`✅ 샘플 과정 ${SAMPLE_COURSES.length}개 (이미 있으면 건너뜀)`);
   console.log("\n=================================================");
   console.log("🔑 테스트 로그인 정보");
   console.log("=================================================");
   console.log("환자:    patient@test.com / test1234");
   console.log("의사:    dentist@test.com / test1234");
-  console.log("관리자:  admin@test.com   / admin1234");
+  console.log("관리자:  admin@test.com   / (위에 한 번 표시한 비밀번호 또는 SEED_ADMIN_PASSWORD)");
   console.log("");
   console.log("더미 환자: patient1~5@test.com / test1234");
   console.log("더미 의사: dentist1~3@test.com / test1234");

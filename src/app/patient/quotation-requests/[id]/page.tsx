@@ -4,6 +4,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { toViewUrls } from "@/lib/s3";
+import { getVerifiedCredentials } from "@/lib/learning-server";
+import { CredentialList } from "@/components/credential-list";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -40,6 +42,7 @@ export default async function QuotationRequestDetailPage({
   if (!request) notFound();
   if (request.patientId !== session.user.id) notFound();
   const photoViewUrls = await toViewUrls(request.photos.map((p) => p.photoUrl));
+  const credentialsByDentist = await getVerifiedCredentials(request.quotations.map((q) => q.dentistId));
 
   const formatWon = (n: bigint | null) =>
     n === null ? "-" : `${n.toLocaleString("ko-KR")}원`;
@@ -131,6 +134,9 @@ export default async function QuotationRequestDetailPage({
                         </div>
                         <div className="text-base text-muted-foreground">
                           {q.clinic.sido} {q.clinic.sigungu}
+                        </div>
+                        <div className="mt-2">
+                          <CredentialList credentials={credentialsByDentist.get(q.dentistId)} max={2} compact />
                         </div>
                       </div>
                       <div className="text-right">

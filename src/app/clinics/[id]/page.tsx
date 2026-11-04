@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
+import { getVerifiedCredentials } from "@/lib/learning-server";
+import { CredentialList } from "@/components/credential-list";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const DAY_LABEL: Record<string, string> = {
@@ -33,6 +35,7 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
   });
 
   if (!clinic) notFound();
+  const credentialsByDentist = await getVerifiedCredentials(clinic.dentists.map((d) => d.id));
 
   return (
     <main className="container max-w-3xl py-10 space-y-6">
@@ -106,13 +109,18 @@ export default async function ClinicDetailPage({ params }: { params: { id: strin
 
           {clinic.dentists.length > 0 && (
             <Section title="의료진">
-              <ul>
+              <ul className="space-y-3">
                 {clinic.dentists.map((d) => (
                   <li key={d.id}>
-                    {d.user.name} 원장 · {d.specialization}
-                    {d.isVerified && (
-                      <span className="ml-2 text-xs text-green-700">✓ 인증</span>
-                    )}
+                    <div>
+                      {d.user.name} 원장 · {d.specialization}
+                      {d.isVerified && (
+                        <span className="ml-2 text-xs text-green-700">✓ 인증</span>
+                      )}
+                    </div>
+                    <div className="mt-1 pl-1">
+                      <CredentialList credentials={credentialsByDentist.get(d.id)} max={3} compact />
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -255,6 +255,17 @@ function NewQuotationForm() {
               value={treatmentTags}
               onChange={setTreatmentTags}
             />
+            {treatmentTags.length > 0 && (
+              // 새 탭으로 열어 작성 중인 견적서 내용이 사라지지 않게 한다
+              <a
+                href={`/dentist/learning?tag=${treatmentTags.join(",")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-base text-blue-600 hover:underline"
+              >
+                선택한 시술 관련 강의 보기 ↗
+              </a>
+            )}
             <div>
               <Label htmlFor="treatmentPlanFreeText">상세 설명 (선택)</Label>
               <Textarea

@@ -22,6 +22,7 @@ export function AppHeader() {
       { href: "/patient/chat", label: "상담 문의" },
       { href: "/patient/appointments", label: "예약" },
       { href: "/clinics/search", label: "병원 검색" },
+      { href: "/procedures", label: "치료 안내" },
     );
   } else if (role === "DENTIST") {
     navLinks.push(
@@ -30,6 +31,8 @@ export function AppHeader() {
       { href: "/dentist/quotations/submitted", label: "작성한 견적서" },
       { href: "/dentist/chat", label: "상담 문의" },
       { href: "/dentist/appointments", label: "상담 일정" },
+      { href: "/dentist/learning", label: "술식 학습" },
+      { href: "/dentist/credentials", label: "교육 이수" },
       { href: "/dentist/clinic-settings", label: "병원 설정" },
     );
   } else if (role === "ADMIN") {
@@ -38,9 +41,14 @@ export function AppHeader() {
       { href: "/admin/users", label: "사용자" },
       { href: "/admin/dentists", label: "치과 인증" },
       { href: "/admin/clinics", label: "병원" },
+      { href: "/admin/courses", label: "술식 과정" },
+      { href: "/admin/credentials", label: "이수 확인" },
     );
   } else {
-    navLinks.push({ href: "/clinics/search", label: "병원 검색" });
+    navLinks.push(
+      { href: "/clinics/search", label: "병원 검색" },
+      { href: "/procedures", label: "치료 안내" },
+    );
   }
 
   return (
@@ -51,7 +59,7 @@ export function AppHeader() {
         </Link>
 
         {/* 데스크탑 네비게이션 */}
-        <nav className="hidden md:flex gap-1">
+        <nav className="hidden lg:flex gap-1">
           {navLinks.map((l) => (
             <Link key={l.href} href={l.href}>
               <Button variant="ghost" size="sm" className="text-base h-10">
@@ -93,7 +101,7 @@ export function AppHeader() {
           {/* 모바일 햄버거 — 노년 친화: 큰 터치 영역 */}
           <button
             type="button"
-            className="md:hidden p-2.5 -mr-2 rounded-lg hover:bg-muted"
+            className="lg:hidden p-2.5 -mr-2 rounded-lg hover:bg-muted"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="메뉴 열기"
             aria-expanded={mobileOpen}
@@ -105,7 +113,7 @@ export function AppHeader() {
 
       {/* 모바일 드롭다운 — 노년 친화: 큰 항목, 본문 폰트 */}
       {mobileOpen && (
-        <div className="md:hidden border-t bg-background">
+        <div className="lg:hidden border-t bg-background">
           <nav className="container py-3 flex flex-col gap-1">
             {navLinks.map((l) => (
               <Link

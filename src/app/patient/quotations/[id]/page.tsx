@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StartChatButton } from "@/components/chat/start-chat-button";
 import { QuotationActions } from "./actions";
+import { ProcedureChips } from "@/components/procedure-chips";
+import { CredentialList } from "@/components/credential-list";
+import { findGuidesInText, getProcedureGuide } from "@/lib/content/procedures";
+import { getVerifiedCredentials } from "@/lib/learning-server";
 
 export default async function ReceivedQuotationDetailPage({
   params,
@@ -29,6 +33,14 @@ export default async function ReceivedQuotationDetailPage({
 
   if (!q) notFound();
   if (q.request.patientId !== session.user.id) notFound();
+
+  // 견적서 문장에 나온 시술 → 환자용 설명. 임플란트 항목이 있으면 식립 안내도 붙인다
+  const guides = findGuidesInText([q.treatmentPlan, ...q.additionalItems.map((it) => it.description)]);
+  const implantGuide = getProcedureGuide("implant");
+  if (q.implantItems.length > 0 && implantGuide && !guides.some((g) => g.tag === "implant")) {
+    guides.push(implantGuide);
+  }
+  const credentials = (await getVerifiedCredentials([q.dentistId])).get(q.dentistId);
 
   return (
     <main className="container max-w-3xl py-10 space-y-6">
@@ -65,6 +77,14 @@ export default async function ReceivedQuotationDetailPage({
           <Section title="치료 계획">
             <p className="whitespace-pre-wrap">{q.treatmentPlan}</p>
           </Section>
+
+          <ProcedureChips guides={guides} />
+
+          {credentials && credentials.length > 0 && (
+            <Section title={`${q.dentist.user.name} 원장 교육 이수`}>
+              <CredentialList credentials={credentials} />
+            </Section>
+          )}
 
           <Section title="임플란트 항목">
             <table className="w-full text-base">

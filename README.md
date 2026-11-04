@@ -175,6 +175,24 @@ dental-nextjs/
 - Vercel Hobby 요금제는 cron 을 하루 1번까지만 허용해서 두 cron 모두 하루 1번이다. 더 자주 돌리려면 Pro 요금제나 외부 스케줄러(GitHub Actions 등)로 같은 주소를 `CRON_SECRET` 과 함께 호출한다.
 - 새 견적 요청은 만든 날로부터 30일 뒤를 `expiresAt` 으로 저장한다. `expiresAt` 이 비어 있는 예전 요청은 자동 만료하지 않는다.
 
+## 술식 안내 · 의사 술식 학습 · 교육 이수
+
+견적서의 시술 태그(`TREATMENT_PLAN_TAGS` — extract, bone_graft, sinus, implant, abutment, crown, ct, anesthesia, scaling, checkup)를 키로 세 기능이 묶인다.
+
+| 기능 | 대상 | 화면 | 데이터 |
+|---|---|---|---|
+| 치료 미리 알아보기 | 환자·비로그인 | `/procedures`, `/procedures/[tag]` | 코드 안 콘텐츠 `src/lib/content/procedures.ts` (DB 없음) |
+| 술식 학습 | 면허 인증 의사 | `/dentist/learning`, `/dentist/learning/[id]` | `Course`, `CourseLesson`, `LessonProgress` |
+| 교육 이수 이력 | 의사 등록 → 환자에게 표시 | `/dentist/credentials` | `DentistCredential` |
+| 과정·강의 관리, 이수 확인 | 관리자 | `/admin/courses`, `/admin/credentials` | — |
+
+- 환자 견적서 상세에 그 견적에 나온 시술의 안내 바로가기가 붙는다 (치료 계획·추가 항목 문장에서 찾음).
+- 과정의 강의를 모두 마치면 온라인 이수 이력이 자동으로 생긴다(확인됨). 오프라인 연수는 의사가 수료증 사진과 함께 등록 → 관리자 확인 후 표시.
+- 환자 화면(받은 견적서·견적 비교·병원 소개)에는 면허 인증된 의사의 확인된 이력만 "○○ 과정 이수 · 기관 · 연월" 로 표시한다. 과정명에 '전문'·'명의' 같은 표현은 받지 않는다 (의료광고).
+- 강의 영상은 YouTube·Vimeo 주소(임베드) 또는 mp4 주소. 우리 S3 주소면 서명 URL 로 재생한다. 공개를 제한해야 하는 강의는 YouTube 일부 공개 대신 S3 나 도메인 제한 Vimeo 를 쓴다.
+- 환자 안내 콘텐츠는 초안이다 (`CONTENT_REVIEWED = false`). 운영 공개 전에 치과 전문가 감수를 받는다.
+- DB 반영: 새 테이블 4개·enum 3개 추가만 있다 (기존 테이블 변경 없음). 배포 **전에** `npm run db:push` 를 먼저 실행해야 한다 — 안 하면 견적서·병원 화면이 없는 테이블을 조회해 오류가 난다.
+
 ## 다음 작업 단계 (TODO)
 
 ### Phase 1 — 최소 기능 (E2E 회원가입/로그인 검증)
@@ -197,6 +215,8 @@ dental-nextjs/
 - [x] 알림 — 이메일 + 화면 알림 벨
 - [ ] 푸시 알림 (Web Push 또는 카카오 알림톡)
 - [ ] 채팅 실시간 채널 (지금은 3초/10초 폴링, 화면이 가려지면 멈춤)
+- [x] 환자용 치료 안내 · 의사 전용 술식 학습 · 교육 이수 이력 표시
+- [ ] 환자용 치료 안내 콘텐츠 전문가 감수
 - [ ] 동의 기록 저장 (회원가입 약관·민감정보 동의를 서버에 기록)
 - [ ] PWA (manifest, 서비스워커, 홈 화면 추가)
 - [ ] 결제 통합 (선택)

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getVerifiedCredentials } from "@/lib/learning-server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -25,6 +26,7 @@ export default async function MyReceivedQuotationsPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+  const credentialsByDentist = await getVerifiedCredentials(Array.from(new Set(quotations.map((q) => q.dentistId))));
 
   return (
     <main className="container max-w-4xl py-10">
@@ -57,6 +59,11 @@ export default async function MyReceivedQuotationsPage() {
                           {q.clinic.reviewCount}) ·{" "}
                           {new Date(q.createdAt).toLocaleDateString("ko-KR")}
                         </CardDescription>
+                        {(credentialsByDentist.get(q.dentistId)?.length ?? 0) > 0 && (
+                          <p className="mt-1 text-sm text-emerald-700">
+                            🎓 교육 이수 {credentialsByDentist.get(q.dentistId)?.length}건
+                          </p>
+                        )}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${status.className}`}>
                         {status.label}

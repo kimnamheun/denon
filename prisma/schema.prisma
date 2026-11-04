@@ -193,12 +193,14 @@ model Dentist {
   introduction      String? @db.Text
   isVerified        Boolean @default(false) @map("is_verified")
 
-  user          User           @relation(fields: [id], references: [id], onDelete: Cascade)
-  clinic        Clinic?        @relation(fields: [clinicId], references: [id])
-  quotations    Quotation[]
-  consultations Consultation[]
-  reviews       Review[]
-  chatRooms     ChatRoom[]
+  user             User                @relation(fields: [id], references: [id], onDelete: Cascade)
+  clinic           Clinic?             @relation(fields: [clinicId], references: [id])
+  quotations       Quotation[]
+  consultations    Consultation[]
+  reviews          Review[]
+  chatRooms        ChatRoom[]
+  lessonProgresses LessonProgress[]
+  credentials      DentistCredential[]
 
   @@map("dentists")
 }
@@ -521,9 +523,9 @@ model ChatMessage {
   imageUrl   String?  @map("image_url")
 
   // null 이면 미읽음. 상대방이 방에 들어와 GET 할 때 일괄 readAt = now() 처리.
-  readAt   DateTime? @map("read_at")
+  readAt    DateTime? @map("read_at")
   // 핀 (즐겨찾기) 시각 — null 이면 핀 안됨
-  pinnedAt DateTime? @map("pinned_at")
+  pinnedAt  DateTime? @map("pinned_at")
   // 소프트 삭제 — UI 에서는 "삭제된 메시지입니다" 로 표시
   deletedAt DateTime? @map("deleted_at")
 
@@ -534,4 +536,108 @@ model ChatMessage {
   @@index([roomId, createdAt])
   @@index([roomId, pinnedAt])
   @@map("chat_messages")
+}
+
+// ──────────────────────────────────────────────────────────
+// 의사 술식 학습 + 교육 이수 이력
+// - Course / CourseLesson: 관리자가 등록하는 의사 전용 술식 강의 (면허 인증 의사만 열람)
+// - LessonProgress: 의사별 강의 완료 기록 → 과정의 모든 강의를 마치면 온라인 이수(DentistCredential) 자동 생성
+// - DentistCredential: 이수 이력. 온라인 과정은 자동 확인(VERIFIED), 오프라인 연수는 수료증 제출 → 관리자 확인
+//   환자 화면에는 VERIFIED 만 "○○ 과정 이수" 로 사실대로 표시한다 ("전문" 표현 금지 — 의료광고)
+// ──────────────────────────────────────────────────────────
+
+enum CourseLevel {
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CredentialSource {
+  ONLINE_COURSE
+  OFFLINE
+}
+
+enum CredentialStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Course {
+  id            String      @id @default(cuid())
+  title         String      @db.VarChar(200)
+  summary       String      @db.Text
+  // 연결 술식 — TREATMENT_PLAN_TAGS 의 value (extract, bone_graft, sinus ...)
+  procedureTags String[]    @map("procedure_tags")
+  level         CourseLevel @default(BASIC)
+  instructor    String?     @db.VarChar(100)
+  isPublished   Boolean     @default(false) @map("is_published")
+  displayOrder  Int         @default(0) @map("display_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  lessons     CourseLesson[]
+  credentials DentistCredential[]
+
+  @@index([isPublished, displayOrder])
+  @@map("courses")
+}
+
+model CourseLesson {
+  id           String  @id @default(cuid())
+  courseId     String  @map("course_id")
+  title        String  @db.VarChar(200)
+  description  String? @db.Text
+  // 영상 주소 — YouTube·Vimeo(임베드) 또는 mp4 주소. 우리 S3 버킷 주소면 서명 URL 로 바꿔 재생
+  videoUrl     String? @map("video_url")
+  durationMin  Int?    @map("duration_min")
+  displayOrder Int     @default(0) @map("display_order")
+
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progresses LessonProgress[]
+
+  @@index([courseId, displayOrder])
+  @@map("course_lessons")
+}
+
+model LessonProgress {
+  dentistId   String   @map("dentist_id")
+  lessonId    String   @map("lesson_id")
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  dentist Dentist      @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  lesson  CourseLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([dentistId, lessonId])
+  @@map("lesson_progresses")
+}
+
+model DentistCredential {
+  id             String           @id @default(cuid())
+  dentistId      String           @map("dentist_id")
+  // 온라인 과정 이수일 때만 채워짐 (과정당 1건)
+  courseId       String?          @map("course_id")
+  title          String           @db.VarChar(200)
+  issuer         String           @db.VarChar(100)
+  completedOn    DateTime         @map("completed_on") @db.Date
+  source         CredentialSource
+  status         CredentialStatus @default(PENDING)
+  // 오프라인 수료증 사진 (S3 — 화면에는 서명 URL)
+  certificateUrl String?          @map("certificate_url")
+  reviewedById   String?          @map("reviewed_by_id")
+  reviewedAt     DateTime?        @map("reviewed_at")
+  rejectReason   String?          @map("reject_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dentist Dentist @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  course  Course? @relation(fields: [courseId], references: [id])
+
+  @@unique([dentistId, courseId])
+  @@index([dentistId, status])
+  @@index([status, createdAt])
+  @@map("dentist_credentials")
 }

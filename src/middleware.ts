@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/auth/register",
   "/auth/forgot-password",
   "/clinics", // /clinics/search, /clinics/:id 등 공개
+  "/procedures", // 환자용 술식 안내
 ];
 
 const PATIENT_PREFIX = "/patient";
@@ -24,6 +25,7 @@ function isPublic(pathname: string): boolean {
   // API 라우트는 각자 세션·권한 체크하므로 미들웨어 통과
   if (pathname.startsWith("/api/")) return true;
   if (pathname.startsWith("/clinics/")) return true;
+  if (pathname.startsWith("/procedures/")) return true;
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/favicon")) return true;
   return false;
