@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { quotationRequestSchema } from "@/lib/zod-schemas";
-import { getDentistAccess, notVerifiedResponse } from "@/lib/dentist-access";
+import { getDentistAccess, requestAccessDenied } from "@/lib/dentist-access";
 import { maskName } from "@/lib/anonymize";
 import { addDays } from "@/lib/kst";
 import { isOwnUpload, toViewUrls } from "@/lib/s3";
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   // 치과: OPEN 상태의 모든 요청 — 면허 인증된 의사만, 환자 이름은 가리고 지역(시/구)까지만
   if (session.user.role === "DENTIST") {
     const access = await getDentistAccess(session.user.id);
-    if (!access.isVerified) return notVerifiedResponse();
+    if (!access.canUseRequests) return requestAccessDenied(access);
 
     const list = await prisma.quotationRequest.findMany({
       where: { status: "OPEN", deletedAt: null },

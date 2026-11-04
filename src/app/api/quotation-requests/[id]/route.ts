@@ -13,7 +13,7 @@ import {
   canDentistSeePatientName,
   canDentistViewRequest,
   getDentistAccess,
-  notVerifiedResponse,
+  requestAccessDenied,
 } from "@/lib/dentist-access";
 import { isOwnUpload, toViewUrls } from "@/lib/s3";
 
@@ -62,14 +62,14 @@ export async function GET(_req: Request, { params }: RouteCtx) {
   const own = request.quotations.filter((q) => q.dentistId === session.user.id);
   const access = await getDentistAccess(session.user.id);
   const canView = canDentistViewRequest({
-    isVerified: access.isVerified,
+    canUseRequests: access.canUseRequests,
     requestStatus: request.status,
     hasOwnQuotation: own.length > 0,
   });
   if (!canView) {
-    return access.isVerified
+    return access.canUseRequests
       ? NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
-      : notVerifiedResponse();
+      : requestAccessDenied(access);
   }
 
   const showName = canDentistSeePatientName(own[0]?.status);

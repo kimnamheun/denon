@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { quotationCreateSchema } from "@/lib/zod-schemas";
 import { sendQuotationReceivedEmail } from "@/lib/mailer";
-import { getDentistAccess, notVerifiedResponse } from "@/lib/dentist-access";
+import { getDentistAccess, requestAccessDenied } from "@/lib/dentist-access";
 import { isDbDateBeforeToday } from "@/lib/kst";
 
 export async function GET() {
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
   // 면허 인증 + 소속 병원 확인
   const dentist = await getDentistAccess(session.user.id);
-  if (!dentist.isVerified) return notVerifiedResponse();
+  if (!dentist.canUseRequests) return requestAccessDenied(dentist);
   if (!dentist.clinicId) {
     return NextResponse.json(
       { error: "INVALID_STATE", message: "병원 등록 후 견적서 작성이 가능합니다" },

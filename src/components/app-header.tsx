@@ -33,6 +33,7 @@ export function AppHeader() {
       { href: "/dentist/appointments", label: "상담 일정" },
       { href: "/dentist/learning", label: "술식 학습" },
       { href: "/dentist/credentials", label: "교육 이수" },
+      { href: "/dentist/subscription", label: "이용권" },
       { href: "/dentist/clinic-settings", label: "병원 설정" },
     );
   } else if (role === "ADMIN") {
@@ -43,6 +44,7 @@ export function AppHeader() {
       { href: "/admin/clinics", label: "병원" },
       { href: "/admin/courses", label: "술식 과정" },
       { href: "/admin/credentials", label: "이수 확인" },
+      { href: "/admin/subscriptions", label: "이용권" },
     );
   } else {
     navLinks.push(

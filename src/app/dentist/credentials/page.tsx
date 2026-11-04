@@ -69,7 +69,11 @@ export default async function DentistCredentialsPage() {
                         <div className="flex flex-wrap items-center gap-2 text-sm">
                           <span className={`rounded-full px-2 py-0.5 ${s.className}`}>{s.label}</span>
                           <span className="text-muted-foreground">
-                            {c.source === "ONLINE_COURSE" ? "온라인 과정" : "오프라인 연수"}
+                            {c.source === "ONLINE_COURSE"
+                              ? "온라인 과정"
+                              : c.source === "EDUCATION_SYNC"
+                                ? "교육 사이트 연동"
+                                : "오프라인 연수"}
                           </span>
                           {certificateViews[i] && (
                             <a

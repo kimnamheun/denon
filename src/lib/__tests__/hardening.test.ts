@@ -98,22 +98,22 @@ describe("schedule — 상담 예약 겹침", () => {
 describe("dentist-access — 의사 열람 권한", () => {
   it("미인증 의사는 열린 요청도 못 본다", () => {
     expect(
-      canDentistViewRequest({ isVerified: false, requestStatus: "OPEN", hasOwnQuotation: false }),
+      canDentistViewRequest({ canUseRequests: false, requestStatus: "OPEN", hasOwnQuotation: false }),
     ).toBe(false);
   });
 
   it("인증 의사는 열린 요청만 본다", () => {
     expect(
-      canDentistViewRequest({ isVerified: true, requestStatus: "OPEN", hasOwnQuotation: false }),
+      canDentistViewRequest({ canUseRequests: true, requestStatus: "OPEN", hasOwnQuotation: false }),
     ).toBe(true);
     expect(
-      canDentistViewRequest({ isVerified: true, requestStatus: "IN_PROGRESS", hasOwnQuotation: false }),
+      canDentistViewRequest({ canUseRequests: true, requestStatus: "IN_PROGRESS", hasOwnQuotation: false }),
     ).toBe(false);
   });
 
   it("내가 견적서를 낸 요청은 마감 뒤에도 본다", () => {
     expect(
-      canDentistViewRequest({ isVerified: true, requestStatus: "IN_PROGRESS", hasOwnQuotation: true }),
+      canDentistViewRequest({ canUseRequests: true, requestStatus: "IN_PROGRESS", hasOwnQuotation: true }),
     ).toBe(true);
   });
 

@@ -193,14 +193,15 @@ model Dentist {
   introduction      String? @db.Text
   isVerified        Boolean @default(false) @map("is_verified")
 
-  user             User                @relation(fields: [id], references: [id], onDelete: Cascade)
-  clinic           Clinic?             @relation(fields: [clinicId], references: [id])
+  user             User                 @relation(fields: [id], references: [id], onDelete: Cascade)
+  clinic           Clinic?              @relation(fields: [clinicId], references: [id])
   quotations       Quotation[]
   consultations    Consultation[]
   reviews          Review[]
   chatRooms        ChatRoom[]
   lessonProgresses LessonProgress[]
   credentials      DentistCredential[]
+  subscription     DentistSubscription?
 
   @@map("dentists")
 }
@@ -555,6 +556,8 @@ enum CourseLevel {
 enum CredentialSource {
   ONLINE_COURSE
   OFFLINE
+  // 교육 사이트(education.denall.com) 수강 이력 연동으로 들어온 이수 — 자동 확인
+  EDUCATION_SYNC
 }
 
 enum CredentialStatus {
@@ -619,6 +622,10 @@ model DentistCredential {
   dentistId      String           @map("dentist_id")
   // 온라인 과정 이수일 때만 채워짐 (과정당 1건)
   courseId       String?          @map("course_id")
+  // 오스템 교육 프로그램 키 (src/lib/content/education-programs.ts)
+  programKey     String?          @map("program_key") @db.VarChar(50)
+  // 교육 사이트 연동 건의 원본 수강 ID — 같은 이력을 두 번 넣지 않게 한다
+  externalId     String?          @unique @map("external_id") @db.VarChar(100)
   title          String           @db.VarChar(200)
   issuer         String           @db.VarChar(100)
   completedOn    DateTime         @map("completed_on") @db.Date
@@ -640,4 +647,83 @@ model DentistCredential {
   @@index([dentistId, status])
   @@index([status, createdAt])
   @@map("dentist_credentials")
+}
+
+// ──────────────────────────────────────────────────────────
+// 의사 월 정액 이용권 (9,900원/월, 토스페이먼츠 카드 자동결제)
+// - 금액은 서버 상수(src/lib/subscription.ts)로만 정한다
+// - billingKey 는 암호화해서 저장한다 (BILLING_KEY_SECRET)
+// - 관리자가 결제 없이 기간을 줄 수도 있다 (source = ADMIN_GRANT)
+// - 구독 필수 여부는 환경변수 SUBSCRIPTION_ENFORCED 로 켠다 (법무 확인 후)
+// ──────────────────────────────────────────────────────────
+
+enum SubscriptionStatus {
+  PENDING // 카드 등록 전
+  ACTIVE
+  PAST_DUE // 갱신 결제 실패 — 며칠 재시도
+  CANCELED // 해지 (기간 끝까지 쓰고 종료)
+  EXPIRED // 재시도 끝 또는 무료 기간 종료
+}
+
+enum SubscriptionSource {
+  TOSS_BILLING
+  ADMIN_GRANT
+}
+
+enum SubscriptionPaymentStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+model DentistSubscription {
+  id                 String             @id @default(cuid())
+  dentistId          String             @unique @map("dentist_id")
+  plan               String             @default("MONTHLY") @db.VarChar(30)
+  amount             Int
+  status             SubscriptionStatus @default(PENDING)
+  source             SubscriptionSource @default(TOSS_BILLING)
+  // 토스 고객 키 (추측하기 어려운 무작위 값)
+  customerKey        String             @unique @map("customer_key") @db.VarChar(64)
+  billingKeyEnc      String?            @map("billing_key_enc") @db.Text
+  cardSummary        String?            @map("card_summary") @db.VarChar(100)
+  currentPeriodStart DateTime?          @map("current_period_start")
+  currentPeriodEnd   DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd  Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt         DateTime?          @map("canceled_at")
+  failedCount        Int                @default(0) @map("failed_count")
+  lastFailure        String?            @map("last_failure") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dentist  Dentist               @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  payments SubscriptionPayment[]
+
+  @@index([status, currentPeriodEnd])
+  @@map("dentist_subscriptions")
+}
+
+model SubscriptionPayment {
+  id             String                    @id @default(cuid())
+  subscriptionId String                    @map("subscription_id")
+  // 기간마다 하나 — 같은 기간을 두 번 결제하지 않게 토스에도 같은 값을 보낸다
+  orderId        String                    @unique @map("order_id") @db.VarChar(64)
+  paymentKey     String?                   @unique @map("payment_key") @db.VarChar(200)
+  amount         Int
+  status         SubscriptionPaymentStatus @default(PENDING)
+  periodStart    DateTime                  @map("period_start")
+  periodEnd      DateTime                  @map("period_end")
+  approvedAt     DateTime?                 @map("approved_at")
+  receiptUrl     String?                   @map("receipt_url")
+  failureCode    String?                   @map("failure_code") @db.VarChar(100)
+  failureMessage String?                   @map("failure_message") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  subscription DentistSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, createdAt])
+  @@map("subscription_payments")
 }

@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getDentistAccess } from "@/lib/dentist-access";
 import { VerificationPending } from "@/components/dentist/verification-pending";
 import { LEVEL_LABEL, PROCEDURE_TAG_VALUES, courseProgress, procedureTagLabel } from "@/lib/learning";
+import { coreTracks, programsForTags } from "@/lib/content/education-programs";
+import { EducationProgramCards } from "@/components/education-program-cards";
 
 export default async function DentistLearningPage({
   searchParams,
@@ -81,6 +83,23 @@ export default async function DentistLearningPage({
           />
         ))}
       </div>
+
+      {/* 오스템 교육 프로그램 — 술식을 골랐으면 그 술식 과정, 아니면 Basic·Master */}
+      {selectedTags.length > 0 ? (
+        <EducationProgramCards
+          programs={programsForTags(selectedTags)}
+          title={`${selectedTags.map(procedureTagLabel).join(", ")} 오프라인 과정`}
+          description="오스템 교육 사이트에서 일정을 보고 신청할 수 있습니다. 수강 이력은 이수 이력으로 연동됩니다."
+        />
+      ) : (
+        <EducationProgramCards
+          programs={coreTracks()}
+          title="오스템 임플란트 교육 — Basic · Master"
+          description="오프라인 장기 과정입니다. 이 화면의 온라인 강의로 먼저 예습하고 신청하세요."
+        />
+      )}
+
+      <h2 className="pt-2 text-lg font-bold">온라인 술식 강의</h2>
 
       {courses.length === 0 ? (
         <Card>

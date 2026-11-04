@@ -169,7 +169,7 @@ dental-nextjs/
 | 경로 | 주기 (UTC) | 하는 일 |
 |---|---|---|
 | `/api/cron/unread-chat` | 매일 00:00 (서울 09:00) | 5분 넘게 안 읽은 채팅 메일 알림 (방마다 1시간에 1번) |
-| `/api/cron/expire` | 매일 15:05 (서울 00:05) | 기간 지난 OPEN 견적 요청 → EXPIRED, 남은 PENDING 견적서와 유효기간 지난 견적서 → EXPIRED (이력 기록) |
+| `/api/cron/daily` | 매일 15:05 (서울 00:05) | 만료 처리(기간 지난 OPEN 견적 요청 → EXPIRED, 남은 PENDING 견적서와 유효기간 지난 견적서 → EXPIRED, 이력 기록) + 월 이용권 갱신 결제. `/api/cron/expire` 는 만료 처리만 수동 실행 |
 
 - 두 cron 모두 `Authorization: Bearer <CRON_SECRET>` 로만 통과한다 (User-Agent 는 인증 근거가 아니다).
 - Vercel Hobby 요금제는 cron 을 하루 1번까지만 허용해서 두 cron 모두 하루 1번이다. 더 자주 돌리려면 Pro 요금제나 외부 스케줄러(GitHub Actions 등)로 같은 주소를 `CRON_SECRET` 과 함께 호출한다.
@@ -192,6 +192,34 @@ dental-nextjs/
 - 강의 영상은 YouTube·Vimeo 주소(임베드) 또는 mp4 주소. 우리 S3 주소면 서명 URL 로 재생한다. 공개를 제한해야 하는 강의는 YouTube 일부 공개 대신 S3 나 도메인 제한 Vimeo 를 쓴다.
 - 환자 안내 콘텐츠는 초안이다 (`CONTENT_REVIEWED = false`). 운영 공개 전에 치과 전문가 감수를 받는다.
 - DB 반영: 새 테이블 4개·enum 3개 추가만 있다 (기존 테이블 변경 없음). 배포 **전에** `npm run db:push` 를 먼저 실행해야 한다 — 안 하면 견적서·병원 화면이 없는 테이블을 조회해 오류가 난다.
+
+## 오스템 교육 프로그램 연결 · 이수 이력 연동
+
+- 술식 학습 화면에 오스템 교육 사이트(education.denall.com) 과정 카드가 붙는다. 술식을 고르면 그 술식 과정(SINUS·GBR·Restoration …), 아니면 Basic·Master 장기 과정(Implant MC Basic, Master Course). 목록은 `src/lib/content/education-programs.ts` — 과정별 신청 주소가 정해지면 `applyUrl` 만 바꾼다.
+- 환자 화면의 이수 이력에는 오스템 Basic·Master 과정을 이름 앞에 표시하고 먼저 보여준다.
+- 교육 사이트 수강 이력 연동 (`DentistCredential.source = EDUCATION_SYNC`, 바로 확인됨):
+  - API: `POST /api/integrations/education/completions`, `Authorization: Bearer <EDUCATION_SYNC_API_KEY>`
+    `{ "records": [{ "externalId": "수강ID", "licenseNumber": "면허번호", "programKey": "MASTER_COURSE", "title": "", "completedOn": "2026-05-30" }] }`
+    → `{ created, updated, skipped }`. 의사는 면허번호로 찾고, 같은 `externalId` 는 덮어쓴다.
+  - API 가 생기기 전에는 관리자 `/admin/credentials` 에 같은 열의 CSV 를 붙여넣어 가져온다.
+
+## 의사 월 이용권 (9,900원/월)
+
+- 토스페이먼츠 카드 자동결제(빌링). 의사 `/dentist/subscription` 에서 카드 등록 → 첫 달 결제 → 매월 같은 날 자동 결제. 해지해도 결제한 기간 끝까지 쓴다. 갱신 실패 시 3일 유예하며 매일 재시도, 3번 실패하면 만료.
+- 금액은 서버 상수(`src/lib/subscription.ts`)로만 정한다. 같은 기간은 같은 주문번호라 두 번 결제되지 않는다. billingKey 는 암호화(AES-256-GCM)해 저장한다.
+- 관리자 `/admin/subscriptions` 에서 결제 없이 무료 기간(1·3개월)을 줄 수 있다.
+- **이용권 필수는 기본 꺼짐.** `SUBSCRIPTION_ENFORCED=true` 일 때만 이용권 없는 의사가 견적 요청 열람·견적서 제출·문의 시작을 못 한다. 술식 학습은 항상 면허 인증만으로 쓴다. 법무 검토 후 켠다.
+- 갱신 결제는 매일 cron `/api/cron/daily` (만료 처리와 함께, 서울 00:05).
+- 환경변수:
+
+| 변수 | 용도 |
+|---|---|
+| `TOSS_CLIENT_KEY` / `TOSS_SECRET_KEY` | 토스페이먼츠 자동결제 키 (자동결제 별도 계약 필요, 먼저 테스트 키로 확인) |
+| `BILLING_KEY_SECRET` | billingKey 암호화 키 — `openssl rand -base64 32` |
+| `SUBSCRIPTION_ENFORCED` | `true` 면 이용권 필수 |
+| `EDUCATION_SYNC_API_KEY` | 교육 사이트 → 이수 이력 연동 API 인증값 |
+
+- 출시 전: 이용약관에 정기결제·해지·환불 조항을 넣는다 (화면 안내는 "환불 기준은 이용약관을 따릅니다").
 
 ## 다음 작업 단계 (TODO)
 

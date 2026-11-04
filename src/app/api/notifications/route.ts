@@ -114,9 +114,9 @@ export async function GET() {
     }
   } else if (session.user.role === "DENTIST") {
     // 면허 인증 전에는 신규 견적 요청 알림을 띄우지 않는다
-    const { isVerified } = await getDentistAccess(session.user.id);
+    const { canUseRequests } = await getDentistAccess(session.user.id);
     const [openRequests, acceptedQuotations] = await Promise.all([
-      !isVerified ? Promise.resolve([]) : prisma.quotationRequest.findMany({
+      !canUseRequests ? Promise.resolve([]) : prisma.quotationRequest.findMany({
         where: {
           status: "OPEN",
           deletedAt: null,

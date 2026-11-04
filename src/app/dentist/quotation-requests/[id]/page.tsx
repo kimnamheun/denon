@@ -10,7 +10,7 @@ import {
   canDentistViewRequest,
   getDentistAccess,
 } from "@/lib/dentist-access";
-import { VerificationPending } from "@/components/dentist/verification-pending";
+import { DentistAccessNotice } from "@/components/dentist/access-notice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -45,11 +45,11 @@ export default async function DentistRequestViewPage({
 
   const alreadyQuoted = request.quotations.length > 0;
   const access = await getDentistAccess(session.user.id);
-  if (!canDentistViewRequest({ isVerified: access.isVerified, requestStatus: request.status, hasOwnQuotation: alreadyQuoted })) {
-    if (!access.isVerified) {
+  if (!canDentistViewRequest({ canUseRequests: access.canUseRequests, requestStatus: request.status, hasOwnQuotation: alreadyQuoted })) {
+    if (!access.canUseRequests) {
       return (
         <main className="container max-w-3xl py-10">
-          <VerificationPending />
+          <DentistAccessNotice block={access.block} />
         </main>
       );
     }

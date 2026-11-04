@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { canDentistViewRequest, getDentistAccess, notVerifiedResponse } from "@/lib/dentist-access";
+import { canDentistViewRequest, getDentistAccess, requestAccessDenied } from "@/lib/dentist-access";
 
 export async function GET() {
   const session = await auth();
@@ -93,12 +93,12 @@ export async function POST(req: Request) {
     // 의사가 먼저 문의하는 경우: 면허 인증 + 볼 수 있는 요청(열린 요청이거나 내가 견적 낸 요청)만
     if (session.user.role === "DENTIST") {
       const access = await getDentistAccess(session.user.id);
-      if (!access.isVerified) return notVerifiedResponse();
       const canView = canDentistViewRequest({
-        isVerified: access.isVerified,
+        canUseRequests: access.canUseRequests,
         requestStatus: r.status,
         hasOwnQuotation: r.quotations.length > 0,
       });
+      if (!canView && !access.canUseRequests) return requestAccessDenied(access);
       if (!canView) {
         return NextResponse.json(
           { error: "REQUEST_CLOSED", message: "마감된 견적 요청에는 새 문의를 시작할 수 없습니다" },

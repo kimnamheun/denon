@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getDentistAccess } from "@/lib/dentist-access";
-import { VerificationPending } from "@/components/dentist/verification-pending";
+import { DentistAccessNotice } from "@/components/dentist/access-notice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const URGENCY_BADGE: Record<string, string> = {
@@ -23,11 +23,11 @@ export default async function AvailableRequestsPage() {
   if (!session?.user || session.user.role !== "DENTIST") return null;
 
   const access = await getDentistAccess(session.user.id);
-  if (!access.isVerified) {
+  if (!access.canUseRequests) {
     return (
       <main className="container max-w-5xl py-10">
         <h1 className="text-3xl font-bold mb-6">견적 요청 목록</h1>
-        <VerificationPending />
+        <DentistAccessNotice block={access.block} />
       </main>
     );
   }

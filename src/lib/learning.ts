@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { TREATMENT_PLAN_TAGS } from "@/lib/constants/quotation-form-options";
+import { EDUCATION_PROGRAMS } from "@/lib/content/education-programs";
 
 export const PROCEDURE_TAG_VALUES = TREATMENT_PLAN_TAGS.map((t) => t.value);
 
@@ -157,6 +158,11 @@ export const offlineCredentialSchema = z.object({
   issuer: z.string().trim().min(1, "주관 기관을 입력하세요").max(100),
   completedOn: dateSchema,
   certificateUrl: z.string().url("수료증 사진을 올려주세요"),
+  /** 오스템 교육 프로그램을 골랐을 때 — 없으면 기타 연수 */
+  programKey: z
+    .string()
+    .optional()
+    .refine((v) => !v || EDUCATION_PROGRAMS.some((p) => p.key === v), "알 수 없는 교육 프로그램입니다"),
 });
 export type OfflineCredentialInput = z.infer<typeof offlineCredentialSchema>;
 

@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatCredentialLine } from "@/lib/learning";
 import { toViewUrl } from "@/lib/s3";
 import { ReviewButtons } from "./review-buttons";
+import { CredentialImportForm } from "./import-form";
+import { EDUCATION_PROGRAMS } from "@/lib/content/education-programs";
 
 export default async function AdminCredentialsPage() {
   const session = await auth();
@@ -70,6 +72,15 @@ export default async function AdminCredentialsPage() {
             </Card>
           ))
         )}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-bold">교육 사이트 수강 이력 가져오기</h2>
+        <Card>
+          <CardContent className="p-4">
+            <CredentialImportForm programKeys={EDUCATION_PROGRAMS.map((p) => p.key)} />
+          </CardContent>
+        </Card>
       </section>
 
       {recent.length > 0 && (

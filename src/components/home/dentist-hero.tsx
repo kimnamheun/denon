@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { maskName, formatBudgetRange, timeAgo } from "@/lib/anonymize";
 import { getDentistAccess } from "@/lib/dentist-access";
 import { kstEndOfDay, kstStartOfDay } from "@/lib/kst";
-import { VerificationPending } from "@/components/dentist/verification-pending";
+import { DentistAccessNotice } from "@/components/dentist/access-notice";
 
 interface Props {
   userId: string;
@@ -21,7 +21,8 @@ const URGENCY_BADGE: Record<string, { label: string; className: string }> = {
 
 export async function DentistHero({ userId, userName }: Props) {
   // 면허 인증 전에는 환자 견적 요청(건강정보)을 세지도 보여주지도 않는다
-  const { isVerified } = await getDentistAccess(userId);
+  const access = await getDentistAccess(userId);
+  const canUseRequests = access.canUseRequests;
   const openRequestWhere = {
     status: "OPEN" as const,
     deletedAt: null,
@@ -36,7 +37,7 @@ export async function DentistHero({ userId, userName }: Props) {
     todayAppointments,
   ] = await Promise.all([
     // 본인이 아직 견적 안 낸 OPEN 요청 수
-    isVerified ? prisma.quotationRequest.count({ where: openRequestWhere }) : Promise.resolve(0),
+    canUseRequests ? prisma.quotationRequest.count({ where: openRequestWhere }) : Promise.resolve(0),
     prisma.quotation.count({
       where: { dentistId: userId, status: "PENDING", deletedAt: null },
     }),
@@ -55,7 +56,7 @@ export async function DentistHero({ userId, userName }: Props) {
       },
     }),
     // 응답 가능한 신규 요청 6건
-    isVerified
+    canUseRequests
       ? prisma.quotationRequest.findMany({
           where: openRequestWhere,
           include: {
@@ -88,7 +89,7 @@ export async function DentistHero({ userId, userName }: Props) {
           <h1 className="text-2xl sm:text-3xl font-bold mt-1">{userName} 원장님</h1>
         </div>
 
-        {!isVerified && <VerificationPending className="mb-6" />}
+        <DentistAccessNotice block={access.block} className="mb-6" />
 
         {/* 통계 카드 4개 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">

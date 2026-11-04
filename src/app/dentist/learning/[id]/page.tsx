@@ -9,6 +9,8 @@ import { getDentistAccess } from "@/lib/dentist-access";
 import { VerificationPending } from "@/components/dentist/verification-pending";
 import { LEVEL_LABEL, parseLessonVideo, procedureTagLabel } from "@/lib/learning";
 import { getProcedureGuide } from "@/lib/content/procedures";
+import { programsForTags } from "@/lib/content/education-programs";
+import { EducationProgramCards } from "@/components/education-program-cards";
 import { toViewUrl } from "@/lib/s3";
 import { LessonPlayer, type PlayerLesson } from "./lesson-player";
 
@@ -80,6 +82,12 @@ export default async function DentistCoursePage({ params }: { params: { id: stri
       </div>
 
       <LessonPlayer lessons={lessons} alreadyCompleted={Boolean(credential)} />
+
+      <EducationProgramCards
+        programs={programsForTags(course.procedureTags)}
+        title="이 술식을 다루는 오스템 오프라인 과정"
+        description="온라인 강의를 마친 뒤 실습 과정으로 이어 들을 수 있습니다."
+      />
 
       {patientGuides.length > 0 && (
         <div className="rounded-lg border p-4">

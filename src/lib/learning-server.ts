@@ -81,7 +81,9 @@ export interface PublicCredential {
   title: string;
   issuer: string;
   completedOn: Date;
-  source: "ONLINE_COURSE" | "OFFLINE";
+  source: "ONLINE_COURSE" | "OFFLINE" | "EDUCATION_SYNC";
+  /** 오스템 교육 프로그램 키 — Basic·Master 표시에 쓴다 */
+  programKey: string | null;
 }
 
 /** 환자 화면용 — 면허 인증된 의사의, 확인된(VERIFIED) 이수 이력만, 최근 순 */
@@ -92,12 +94,19 @@ export async function getVerifiedCredentials(
   if (dentistIds.length === 0) return map;
   const rows = await prisma.dentistCredential.findMany({
     where: { dentistId: { in: [...dentistIds] }, status: "VERIFIED", dentist: { isVerified: true } },
-    select: { id: true, dentistId: true, title: true, issuer: true, completedOn: true, source: true },
+    select: { id: true, dentistId: true, title: true, issuer: true, completedOn: true, source: true, programKey: true },
     orderBy: [{ completedOn: "desc" }, { createdAt: "desc" }],
   });
   for (const r of rows) {
     const list = map.get(r.dentistId) ?? [];
-    list.push({ id: r.id, title: r.title, issuer: r.issuer, completedOn: r.completedOn, source: r.source });
+    list.push({
+      id: r.id,
+      title: r.title,
+      issuer: r.issuer,
+      completedOn: r.completedOn,
+      source: r.source,
+      programKey: r.programKey,
+    });
     map.set(r.dentistId, list);
   }
   return map;

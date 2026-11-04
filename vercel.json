@@ -23,7 +23,7 @@
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/cron/expire",
+      "path": "/api/cron/daily",
       "schedule": "5 15 * * *"
     }
   ]

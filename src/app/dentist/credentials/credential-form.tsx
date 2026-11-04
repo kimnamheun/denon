@@ -11,11 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadFile } from "@/lib/upload";
 import { kstDateString } from "@/lib/kst";
+import { EDUCATION_ISSUER, EDUCATION_PROGRAMS, TRACK_LABEL } from "@/lib/content/education-programs";
 
 export function OfflineCredentialForm() {
   const router = useRouter();
+  const [programKey, setProgramKey] = useState("");
   const [title, setTitle] = useState("");
-  const [issuer, setIssuer] = useState("오스템임플란트");
+  const [issuer, setIssuer] = useState(EDUCATION_ISSUER);
   const [completedOn, setCompletedOn] = useState("");
   const [certificate, setCertificate] = useState<{ publicUrl: string; viewUrl: string } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -52,7 +54,13 @@ export function OfflineCredentialForm() {
       const res = await fetch("/api/credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, issuer, completedOn, certificateUrl: certificate.publicUrl }),
+        body: JSON.stringify({
+          title,
+          issuer,
+          completedOn,
+          certificateUrl: certificate.publicUrl,
+          programKey: programKey || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -60,6 +68,7 @@ export function OfflineCredentialForm() {
         return;
       }
       setTitle("");
+      setProgramKey("");
       setCompletedOn("");
       setCertificate(null);
       setDone(true);
@@ -71,6 +80,33 @@ export function OfflineCredentialForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="cred-program" className="text-base">교육 프로그램</Label>
+        <select
+          id="cred-program"
+          value={programKey}
+          onChange={(e) => {
+            const key = e.target.value;
+            setProgramKey(key);
+            const p = EDUCATION_PROGRAMS.find((x) => x.key === key);
+            if (p) {
+              setTitle(p.name);
+              setIssuer(EDUCATION_ISSUER);
+            }
+          }}
+          className="h-12 w-full rounded-md border bg-background px-3 text-base"
+        >
+          <option value="">기타 연수 (직접 입력)</option>
+          {EDUCATION_PROGRAMS.map((p) => (
+            <option key={p.key} value={p.key}>
+              오스템 {p.name} ({TRACK_LABEL[p.track]})
+            </option>
+          ))}
+        </select>
+        <p className="text-sm text-muted-foreground">
+          교육 사이트 수강 이력이 연동되면 따로 등록하지 않아도 자동으로 올라옵니다.
+        </p>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="cred-title" className="text-base">과정명 (수료증에 적힌 그대로)</Label>
         <Input

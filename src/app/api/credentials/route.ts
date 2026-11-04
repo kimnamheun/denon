@@ -59,6 +59,7 @@ export async function POST(req: Request) {
       source: "OFFLINE",
       status: "PENDING",
       certificateUrl: data.certificateUrl,
+      programKey: data.programKey || null,
     },
   });
   return NextResponse.json(created, { status: 201 });
