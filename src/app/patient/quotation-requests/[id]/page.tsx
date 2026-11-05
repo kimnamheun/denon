@@ -126,8 +126,8 @@ export default async function QuotationRequestDetailPage({
               <Link key={q.id} href={`/patient/quotations/${q.id}`}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="p-5">
-                    <div className="flex justify-between items-start">
-                      <div>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="min-w-0">
                         <div className="font-semibold">{q.clinic.name}</div>
                         <div className="text-base text-muted-foreground mt-1">
                           {q.dentist.user.name} 원장 · 평점 {Number(q.clinic.rating).toFixed(1)} ({q.clinic.reviewCount})
@@ -135,19 +135,22 @@ export default async function QuotationRequestDetailPage({
                         <div className="text-base text-muted-foreground">
                           {q.clinic.sido} {q.clinic.sigungu}
                         </div>
-                        <div className="mt-2">
-                          <CredentialList credentials={credentialsByDentist.get(q.dentistId)} max={2} compact />
-                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">
+                      <div className="text-right shrink-0">
+                        <div className="text-xl sm:text-2xl font-bold whitespace-nowrap">
                           {q.finalAmount.toLocaleString("ko-KR")}원
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">
                           {q.warrantyPeriod}년 보증 · {q.treatmentDuration}개월
                         </div>
                       </div>
                     </div>
+                    {/* 이수 이력은 폰 화면에서도 읽히게 카드 폭 전체를 쓴다 */}
+                    {(credentialsByDentist.get(q.dentistId)?.length ?? 0) > 0 && (
+                      <div className="mt-3 border-t pt-3">
+                        <CredentialList credentials={credentialsByDentist.get(q.dentistId)} max={2} compact />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
