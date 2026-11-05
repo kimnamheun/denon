@@ -57,7 +57,7 @@ export function AppHeader() {
     <header className="border-b bg-background sticky top-0 z-40">
       <div className="container flex h-16 items-center justify-between gap-2">
         <Link href="/" className="text-lg font-bold whitespace-nowrap">
-          🦷 임플란트 플랫폼
+          🦷 오스템 네트로
         </Link>
 
         {/* 데스크탑 네비게이션 */}

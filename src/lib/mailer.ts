@@ -65,7 +65,7 @@ export async function sendUnreadChatEmail(opts: {
 }) {
   await sendMail({
     to: opts.to,
-    subject: `[임플란트 플랫폼] ${opts.senderName} 님으로부터 새 메시지 ${opts.unreadCount}건`,
+    subject: `[오스템 네트로] ${opts.senderName} 님으로부터 새 메시지 ${opts.unreadCount}건`,
     html: `
       <h2>${opts.recipientName}님, 새 메시지가 있어요</h2>
       <p><strong>${opts.senderName}</strong> 님께서 보내신 읽지 않은 메시지가 <strong>${opts.unreadCount}건</strong> 있습니다.</p>
@@ -87,10 +87,10 @@ export async function sendWelcomeEmail(opts: {
   const link = isDentist ? `${baseUrl}/dentist/dashboard` : `${baseUrl}/patient/dashboard`;
   await sendMail({
     to: opts.to,
-    subject: "[임플란트 플랫폼] 가입을 환영합니다",
+    subject: "[오스템 네트로] 가입을 환영합니다",
     html: `
       <h2>${opts.name}님, 환영합니다 🦷</h2>
-      <p>치과 임플란트 중계 플랫폼에 가입하신 것을 환영합니다.</p>
+      <p>오스템 네트로에 가입하신 것을 환영합니다.</p>
       ${isDentist
         ? "<p>치과의사 인증이 완료되면 견적서 작성 및 환자 매칭이 가능합니다.</p>"
         : "<p>견적 요청을 등록하여 여러 치과의 견적을 비교해보세요.</p>"
@@ -110,7 +110,7 @@ export async function sendQuotationReceivedEmail(opts: {
   const amount = Number(opts.finalAmount).toLocaleString("ko-KR");
   await sendMail({
     to: opts.to,
-    subject: `[임플란트 플랫폼] ${opts.clinicName} 견적서가 도착했습니다`,
+    subject: `[오스템 네트로] ${opts.clinicName} 견적서가 도착했습니다`,
     html: `
       <h2>${opts.patientName}님, 새 견적서가 도착했습니다</h2>
       <p><strong>${opts.clinicName}</strong>에서 견적서를 보내왔습니다.</p>
@@ -128,7 +128,7 @@ export async function sendQuotationAcceptedEmail(opts: {
 }) {
   await sendMail({
     to: opts.to,
-    subject: `[임플란트 플랫폼] 견적서가 수락되었습니다`,
+    subject: `[오스템 네트로] 견적서가 수락되었습니다`,
     html: `
       <h2>${opts.dentistName} 원장님, 견적서가 수락되었습니다 🎉</h2>
       <p>${opts.patientName}님께서 견적서를 수락하셨습니다. 곧 상담 예약이 진행될 예정입니다.</p>
@@ -153,7 +153,7 @@ export async function sendConsultationBookedEmail(opts: {
       : `${baseUrl}/dentist/appointments`;
   await sendMail({
     to: opts.to,
-    subject: `[임플란트 플랫폼] 상담 예약이 확정되었습니다`,
+    subject: `[오스템 네트로] 상담 예약이 확정되었습니다`,
     html: `
       <h2>${opts.recipientName}님, 상담 예약이 확정되었습니다</h2>
       <p><strong>${opts.counterpartName}</strong>과의 상담이 다음 일정으로 예약되었습니다.</p>

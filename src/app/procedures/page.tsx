@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PROCEDURE_DISCLAIMER, PROCEDURE_GUIDES } from "@/lib/content/procedures";
 
 export const metadata: Metadata = {
-  title: "치료 미리 알아보기 | 임플란트 플랫폼",
+  title: "치료 미리 알아보기 | 오스템 네트로",
   description: "견적서에 나오는 임플란트 치료를 쉬운 말로 설명합니다.",
 };
 

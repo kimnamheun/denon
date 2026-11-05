@@ -10,7 +10,7 @@ import { AppFooter } from "@/components/app-footer";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "치과 임플란트 중계 플랫폼",
+  title: "오스템 네트로",
   description: "환자와 치과를 연결하는 임플란트 견적 비교 플랫폼",
 };
 

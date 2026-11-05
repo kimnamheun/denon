@@ -1,4 +1,4 @@
-export const metadata = { title: "개인정보처리방침 | Denon" };
+export const metadata = { title: "개인정보처리방침 | 오스템 네트로" };
 
 export default function PrivacyPage() {
   return (

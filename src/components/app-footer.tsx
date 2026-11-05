@@ -46,7 +46,7 @@ export function AppFooter() {
           <div>
             <h3 className="font-bold mb-3">회사</h3>
             <ul className="space-y-2 text-muted-foreground">
-              <li>치과 임플란트 중계 플랫폼</li>
+              <li>오스템 네트로</li>
               <li>사업자 등록: 000-00-00000</li>
             </ul>
           </div>

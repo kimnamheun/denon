@@ -1,4 +1,4 @@
-export const metadata = { title: "이용약관 | Denon" };
+export const metadata = { title: "이용약관 | 오스템 네트로" };
 
 export default function TermsPage() {
   return (
