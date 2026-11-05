@@ -7,6 +7,7 @@ import { maskName, formatBudgetRange, timeAgo } from "@/lib/anonymize";
 import { getDentistAccess } from "@/lib/dentist-access";
 import { kstEndOfDay, kstStartOfDay } from "@/lib/kst";
 import { DentistAccessNotice } from "@/components/dentist/access-notice";
+import { toothSummary } from "@/lib/teeth";
 
 interface Props {
   userId: string;
@@ -186,7 +187,7 @@ export async function DentistHero({ userId, userName }: Props) {
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-1">
                           <span className="text-base font-medium">
-                            치아 {r.missingTeeth.length}개
+                            {toothSummary(r.missingTeeth.map((t) => t.toothNumber))}
                           </span>
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-full ${urg.className}`}

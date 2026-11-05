@@ -23,6 +23,8 @@ interface WizardStepProps {
   onSkip?: () => void;
   /** 다음 버튼 처리 중 (loading) */
   loading?: boolean;
+  /** 단계 안의 하위 화면(예: 치아 부위 확대)일 때 — 제목을 작게, 설명은 숨김 */
+  compact?: boolean;
 }
 
 export function WizardStep({
@@ -37,6 +39,7 @@ export function WizardStep({
   nextLabel = "다음",
   onSkip,
   loading,
+  compact = false,
 }: WizardStepProps) {
   const progress = (current / total) * 100;
 
@@ -62,15 +65,21 @@ export function WizardStep({
 
       {/* 본문 */}
       <div className="container max-w-2xl flex-1 py-8">
-        <h1 className="text-3xl font-bold leading-tight md:text-4xl">
+        <h1
+          className={cn(
+            "break-keep font-bold",
+            // 크기 클래스 뒤에 leading 을 둬야 tailwind-merge 가 줄 간격을 지우지 않는다
+            compact ? "text-lg leading-snug text-muted-foreground" : "text-3xl leading-tight md:text-4xl",
+          )}
+        >
           {title}
         </h1>
-        {description && (
+        {description && !compact && (
           <p className="mt-3 text-base text-muted-foreground md:text-lg">
             {description}
           </p>
         )}
-        <div className="mt-8">{children}</div>
+        <div className={compact ? "mt-3" : "mt-8"}>{children}</div>
       </div>
 
       {/* 하단 고정 액션 */}

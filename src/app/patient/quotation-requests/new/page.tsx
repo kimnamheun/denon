@@ -10,6 +10,7 @@ import { ToothSelector } from "@/components/tooth-selector";
 import { WizardStep } from "@/components/wizard/wizard-step";
 import { BigToggleGroup } from "@/components/wizard/big-toggle-group";
 import { uploadFile } from "@/lib/upload";
+import { formatTeethForPatient } from "@/lib/teeth";
 import {
   SYMPTOM_OPTIONS,
   TREATMENT_HISTORY_OPTIONS,
@@ -32,6 +33,7 @@ export default function NewQuotationRequestPage() {
 
   /* ── 입력 상태 ────────────────────────────────── */
   const [missingTeeth, setMissingTeeth] = useState<string[]>([]);
+  const [toothZoneOpen, setToothZoneOpen] = useState(false);
 
   const [symptomTags, setSymptomTags] = useState<string[]>([]);
   const [symptomEtcOpen, setSymptomEtcOpen] = useState(false);
@@ -161,17 +163,16 @@ export default function NewQuotationRequestPage() {
       <WizardStep
         current={1}
         total={TOTAL_STEPS}
-        title="어느 치아가 불편하신가요?"
-        description="문제 있는 치아를 모두 눌러주세요. 여러 개 선택할 수 있어요."
+        title="이가 빠졌거나 불편한 곳은 어디인가요?"
+        description="부위를 먼저 누르고, 그다음 해당하는 이를 골라 주세요. 여러 곳을 고를 수 있어요."
         canNext={canNext}
-        onNext={goNext}
+        onNext={() => {
+          setToothZoneOpen(false);
+          goNext();
+        }}
+        compact={toothZoneOpen}
       >
-        <ToothSelector value={missingTeeth} onChange={setMissingTeeth} />
-        {missingTeeth.length > 0 && (
-          <p className="mt-4 rounded-lg bg-primary/10 px-4 py-3 text-base font-medium text-primary">
-            {missingTeeth.length}개 치아 선택됨
-          </p>
-        )}
+        <ToothSelector value={missingTeeth} onChange={setMissingTeeth} onZoneOpenChange={setToothZoneOpen} />
       </WizardStep>
     );
   }
@@ -373,7 +374,7 @@ export default function NewQuotationRequestPage() {
       loading={submitting}
     >
       <div className="space-y-4 rounded-2xl border-2 bg-muted/30 p-5">
-        <Summary label="치아" value={`${missingTeeth.length}개 선택`} />
+        <Summary label="치아" value={formatTeethForPatient(missingTeeth)} />
         <Summary
           label="증상"
           value={

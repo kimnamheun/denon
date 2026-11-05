@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getDentistAccess } from "@/lib/dentist-access";
 import { DentistAccessNotice } from "@/components/dentist/access-notice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { toothSummary } from "@/lib/teeth";
 
 const URGENCY_BADGE: Record<string, string> = {
   LOW: "bg-gray-100 text-gray-700",
@@ -70,7 +71,7 @@ export default async function AvailableRequestsPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base flex-1">
-                      치아 {r.missingTeeth.length}개 임플란트
+                      임플란트 · {toothSummary(r.missingTeeth.map((t) => t.toothNumber))}
                     </CardTitle>
                     <span
                       className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${

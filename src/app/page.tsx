@@ -14,6 +14,7 @@ import { DentistHero } from "@/components/home/dentist-hero";
 import { AdminHero } from "@/components/home/admin-hero";
 import { RegionalClinics } from "@/components/home/regional-clinics";
 import { PatientTimeline } from "@/components/home/patient-timeline";
+import { toothSummary } from "@/lib/teeth";
 
 export const revalidate = 60;
 
@@ -319,7 +320,7 @@ async function LiveRequestsSection({ isDentist }: { isDentist: boolean }) {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="text-base font-medium">
-                      임플란트 견적 요청 (치아 {r.missingTeeth.length}개)
+                      임플란트 견적 요청 ({toothSummary(r.missingTeeth.map((t) => t.toothNumber))})
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${urg.className}`}>
                       {urg.label}

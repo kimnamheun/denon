@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { toothSummary } from "@/lib/teeth";
 
 const URGENCY_LABEL: Record<string, string> = {
   LOW: "여유롭게",
@@ -71,8 +72,8 @@ export default async function MyQuotationRequestsPage() {
                         </CardTitle>
                         <CardDescription className="mt-1">
                           {new Date(r.createdAt).toLocaleDateString("ko-KR")} ·
-                          긴급도: {URGENCY_LABEL[r.urgency]} ·
-                          치아 {r.missingTeeth.length}개
+                          긴급도: {URGENCY_LABEL[r.urgency]} ·{" "}
+                          {toothSummary(r.missingTeeth.map((t) => t.toothNumber))}
                         </CardDescription>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${status.className}`}>

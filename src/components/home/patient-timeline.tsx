@@ -4,6 +4,7 @@ import { FileText, Inbox, Calendar, Star, Activity } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { timeAgo } from "@/lib/anonymize";
+import { toothSummary } from "@/lib/teeth";
 
 interface Props {
   userId: string;
@@ -69,7 +70,7 @@ export async function PatientTimeline({ userId }: Props) {
       type: "REQUEST" as const,
       at: r.createdAt,
       title: "견적 요청 작성",
-      desc: `치아 ${r.missingTeeth.length}개 임플란트 · ${r.status}`,
+      desc: `임플란트 · ${toothSummary(r.missingTeeth.map((t) => t.toothNumber))} · ${r.status}`,
       href: `/patient/quotation-requests/${r.id}`,
     })),
     ...quotations.map((q) => ({

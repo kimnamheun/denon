@@ -13,6 +13,7 @@ import {
 import { DentistAccessNotice } from "@/components/dentist/access-notice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatTeethForDentist, toothSummary } from "@/lib/teeth";
 
 const URGENCY_LABEL: Record<string, string> = {
   LOW: "여유롭게",
@@ -75,7 +76,7 @@ export default async function DentistRequestViewPage({
       <Card>
         <CardHeader>
           <CardTitle>
-            치아 {request.missingTeeth.length}개 임플란트 견적 요청
+            임플란트 견적 요청 · {toothSummary(request.missingTeeth.map((t) => t.toothNumber))}
           </CardTitle>
           <CardDescription>
             요청일: {new Date(request.createdAt).toLocaleString("ko-KR")} · 환자: {patientName}
@@ -84,7 +85,7 @@ export default async function DentistRequestViewPage({
         </CardHeader>
         <CardContent className="space-y-4 text-base">
           <Field label="치아 위치">
-            {request.missingTeeth.map((t) => t.toothNumber).sort().join(", ") || "-"}
+            {formatTeethForDentist(request.missingTeeth.map((t) => t.toothNumber))}
           </Field>
           <Field label="증상">{request.symptoms || "-"}</Field>
           <Field label="치료 이력">{request.previousTreatment || "-"}</Field>

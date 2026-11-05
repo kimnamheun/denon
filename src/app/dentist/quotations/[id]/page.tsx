@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StartChatButton } from "@/components/chat/start-chat-button";
+import { formatTeethForDentist } from "@/lib/teeth";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   PENDING: { label: "검토 중", className: "bg-blue-100 text-blue-700" },
@@ -85,7 +86,7 @@ export default async function DentistQuotationDetailPage({
         </CardHeader>
         <CardContent className="space-y-4 text-base">
           <Section title="환자 요청 치아">
-            {q.request.missingTeeth.map((t) => t.toothNumber).sort().join(", ")}
+            {formatTeethForDentist(q.request.missingTeeth.map((t) => t.toothNumber))}
           </Section>
 
           <Section title="치료 계획">

@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getDentistAccess } from "@/lib/dentist-access";
+import { toothSummary } from "@/lib/teeth";
 
 interface NotificationItem {
   id: string;
@@ -150,7 +151,7 @@ export async function GET() {
         id: `r-${r.id}`,
         type: "REQUEST",
         title: r.urgency === "HIGH" ? "🔥 시급 견적 요청" : "신규 견적 요청",
-        desc: `치아 ${r.missingTeeth.length}개 임플란트`,
+        desc: `임플란트 · ${toothSummary(r.missingTeeth.map((t) => t.toothNumber))}`,
         href: `/dentist/quotation-requests/${r.id}`,
         at: r.createdAt.toISOString(),
       });

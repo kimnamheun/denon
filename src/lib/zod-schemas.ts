@@ -3,6 +3,8 @@
 
 import { z } from "zod";
 
+import { isValidToothEntry } from "./teeth";
+
 // ============================================================
 // Auth
 // ============================================================
@@ -65,7 +67,12 @@ export const quotationRequestSchema = z.object({
   preferredImplantBrand: z.string().max(50).optional(),
   preferredHospitalType: z.string().max(50).optional(),
   additionalNotes: z.string().optional(),
-  missingTeeth: z.array(z.string()).default([]),
+  // 치아 번호(FDI) 또는 부위·바로가기 값 — 형식은 src/lib/teeth.ts. 같은 값은 한 번만 저장(PK)
+  missingTeeth: z
+    .array(z.string().refine(isValidToothEntry, "치아 정보가 올바르지 않습니다"))
+    .max(40)
+    .transform((a) => Array.from(new Set(a)))
+    .default([]),
   photoUrls: z.array(z.string().url()).default([]),
 });
 export type QuotationRequestInput = z.infer<typeof quotationRequestSchema>;

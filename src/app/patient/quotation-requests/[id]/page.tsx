@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { toViewUrls } from "@/lib/s3";
 import { getVerifiedCredentials } from "@/lib/learning-server";
 import { CredentialList } from "@/components/credential-list";
+import { formatTeethForPatient, toothSummary } from "@/lib/teeth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -74,7 +75,7 @@ export default async function QuotationRequestDetailPage({
                   day: "numeric",
                   weekday: "long",
                 })}{" "}
-                작성 · 치아 {request.missingTeeth.length}개
+                작성 · {toothSummary(request.missingTeeth.map((t) => t.toothNumber))}
               </CardDescription>
             </div>
             <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
@@ -84,7 +85,7 @@ export default async function QuotationRequestDetailPage({
         </CardHeader>
         <CardContent className="space-y-4 text-base">
           <Field label="치아 위치">
-            {request.missingTeeth.map((t) => t.toothNumber).sort().join(", ") || "-"}
+            {formatTeethForPatient(request.missingTeeth.map((t) => t.toothNumber))}
           </Field>
           <Field label="증상">{request.symptoms || "-"}</Field>
           <Field label="치료 이력">{request.previousTreatment || "-"}</Field>

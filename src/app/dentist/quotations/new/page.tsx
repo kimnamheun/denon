@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ToggleGroup } from "@/components/ui/toggle-group";
+import { exactTeeth, formatTeethForDentist } from "@/lib/teeth";
 import {
   ADDITIONAL_ITEM_PRESETS,
   DENTIST_IMPLANT_BRANDS,
@@ -91,10 +92,10 @@ function NewQuotationForm() {
       .then((data: RequestData | null) => {
         if (data) {
           setRequestData(data);
-          // 누락치아를 기반으로 임플란트 아이템 초기 생성
+          // 정확한 치아 번호만 임플란트 항목으로 미리 채운다 (부위·개수만 고른 요청은 의사가 직접 추가)
           setImplantItems(
-            data.missingTeeth.map((t) => ({
-              toothNumber: t.toothNumber,
+            exactTeeth(data.missingTeeth.map((t) => t.toothNumber)).map((toothNumber) => ({
+              toothNumber,
               brand: "",
               quantity: 1,
               unitPrice: 0,
@@ -237,7 +238,7 @@ function NewQuotationForm() {
         <h1 className="text-3xl font-bold">견적서 작성</h1>
         {requestData && (
           <p className="text-muted-foreground mt-2">
-            요청 치아: {requestData.missingTeeth.map((t) => t.toothNumber).join(", ")}
+            요청 치아: {formatTeethForDentist(requestData.missingTeeth.map((t) => t.toothNumber))}
           </p>
         )}
       </div>
