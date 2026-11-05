@@ -2,8 +2,8 @@
 
 // 치아 선택 — 50~70대도 고를 수 있게 "부위 먼저, 치아는 크게"
 //  1) 입 모양 지도에서 부위(위·아래 × 왼쪽 어금니·앞니·오른쪽 어금니)를 누른다
-//  2) 그 부위 치아만 크게 보고 빠진 이를 누른다 — 헷갈리면 개수만 고른다
-//  바로가기: 이가 거의 없어요 / 틀니를 쓰고 있어요 / 잘 모르겠어요(사진·상담)
+//  2) 그 부위 치아만 크게 보고 빠진 치아를 누른다 — 헷갈리면 개수만 고른다
+//  바로가기: 치아가 거의 없어요 / 틀니를 쓰고 있어요 / 잘 모르겠어요(사진·상담)
 // 값 형식은 src/lib/teeth.ts 참고. 화면은 거울 보듯 오른쪽 = 환자 오른쪽.
 
 import { useState } from "react";
@@ -73,7 +73,7 @@ export function ToothSelector({ value, onChange, onZoneOpenChange }: Props) {
   function toggleTooth(fdi: string) {
     const zone = zoneOfTooth(fdi)!;
     const arch = ZONES[zone].arch;
-    // 정확한 치아를 고르면 같은 부위의 "개수만" 값과 그 턱의 "이가 거의 없음"은 뺀다
+    // 정확한 치아를 고르면 같은 부위의 "개수만" 값과 그 턱의 "치아가 거의 없음"은 뺀다
     const rest = value.filter(
       (c) => c !== fdi && !(c.startsWith("Z:") && inZone(c, zone)) && c !== archCode("E", arch),
     );
@@ -91,7 +91,7 @@ export function ToothSelector({ value, onChange, onZoneOpenChange }: Props) {
     const same = current.size === arches.length && arches.every((a) => current.has(a));
     let rest = value.filter((c) => !c.startsWith(`${kind}:`));
     if (same) return onChange(rest);
-    // 이가 거의 없는 턱은 부위·치아 선택을 대신한다
+    // 치아가 거의 없는 턱은 부위·치아 선택을 대신한다
     if (kind === "E") rest = rest.filter((c) => !arches.some((a) => inArch(c, a)));
     onChange([...rest, ...arches.map((a) => archCode(kind, a))]);
   }
@@ -140,7 +140,7 @@ export function ToothSelector({ value, onChange, onZoneOpenChange }: Props) {
                   onClick={() => setArches("E", Array.from(edentulous).filter((a) => a !== arch))}
                   className="flex min-h-[76px] w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 text-lg font-semibold text-primary"
                 >
-                  {ARCH_LABEL[arch]} · 이가 거의 없음
+                  {ARCH_LABEL[arch]} · 치아가 거의 없음
                   <span className="text-sm font-normal underline">해제</span>
                 </button>
               ) : (
@@ -184,7 +184,7 @@ export function ToothSelector({ value, onChange, onZoneOpenChange }: Props) {
         <div className="space-y-3">
           <ArchShortcut
             icon={<Smile className="h-6 w-6" aria-hidden />}
-            label="이가 거의 없어요"
+            label="치아가 거의 없어요"
             selected={edentulous}
             onPick={(arches) => setArches("E", arches)}
           />
@@ -344,7 +344,7 @@ function ZoneView({
         <ChevronLeft className="h-5 w-5" aria-hidden /> 부위 다시 고르기
       </button>
       <h2 className="mt-4 text-2xl font-bold">{zone.label}</h2>
-      <p className="mt-1 text-base text-muted-foreground">빠졌거나 뽑아야 하는 이를 눌러 주세요.</p>
+      <p className="mt-1 text-base text-muted-foreground">빠졌거나 뽑아야 하는 치아를 눌러 주세요.</p>
 
       <div className="mt-6 rounded-2xl border-2 bg-muted/20 px-2 py-4">
         {upper && gum}
@@ -393,7 +393,7 @@ function ZoneView({
       )}
 
       <div className="mt-6 border-t pt-5">
-        <p className="text-base font-semibold">어느 이인지 헷갈리면 개수만 골라 주세요</p>
+        <p className="break-keep text-base font-semibold">어느 치아인지 헷갈리면 개수만 골라 주세요</p>
         <div className="mt-3 grid grid-cols-4 gap-2">
           {AREA_COUNTS.map((c) => (
             <button

@@ -60,7 +60,7 @@ describe("표시", () => {
   it("줄마다 지울 값을 함께 준다", () => {
     const lines = describeTeeth(codes);
     expect(lines.map((l) => l.text)).toEqual([
-      "아래 · 이가 거의 없음",
+      "아래 · 치아가 거의 없음",
       "위 왼쪽 어금니 2개 · 위치 미확인",
       "아래 왼쪽 어금니 2개",
       "위 · 틀니 사용 중",

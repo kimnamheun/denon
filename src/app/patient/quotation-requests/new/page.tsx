@@ -163,8 +163,8 @@ export default function NewQuotationRequestPage() {
       <WizardStep
         current={1}
         total={TOTAL_STEPS}
-        title="이가 빠졌거나 불편한 곳은 어디인가요?"
-        description="부위를 먼저 누르고, 그다음 해당하는 이를 골라 주세요. 여러 곳을 고를 수 있어요."
+        title="빠졌거나 불편한 치아는 어디인가요?"
+        description="부위를 먼저 누르고, 그다음 치아를 골라 주세요. 여러 곳을 고를 수 있어요."
         canNext={canNext}
         onNext={() => {
           setToothZoneOpen(false);

@@ -1,9 +1,9 @@
 // 견적 요청의 치아 정보 — QuotationRequestMissingTooth.toothNumber 한 칸에 담는 값
 //
 //   "36"      정확한 치아 (FDI 번호)
-//   "Z:LL:2"  부위 + 개수 — 어느 이인지는 모를 때 (1~3개)
+//   "Z:LL:2"  부위 + 개수 — 어느 치아인지는 모를 때 (1~3개)
 //   "Z:LL:A"  부위 전부
-//   "E:U"     위(U)·아래(L) 이가 거의 없음
+//   "E:U"     위(U)·아래(L) 치아가 거의 없음
 //   "D:U"     위(U)·아래(L) 틀니 사용 중
 //   "P"       위치를 모름 — 사진·상담으로 확인
 //
@@ -149,14 +149,14 @@ export interface ToothLine {
 
 /**
  * 사람이 읽는 줄 목록. withNumbers=true 면 의사용으로 FDI 번호를 붙인다.
- * 예) "아래 왼쪽 어금니 2개 (36, 37)", "위 왼쪽 어금니 2개 · 위치 미확인", "위 · 이가 거의 없음"
+ * 예) "아래 왼쪽 어금니 2개 (36, 37)", "위 왼쪽 어금니 2개 · 위치 미확인", "위 · 치아가 거의 없음"
  */
 export function describeTeeth(codes: readonly string[], opts: { withNumbers?: boolean } = {}): ToothLine[] {
   const g = group(codes);
   const lines: ToothLine[] = [];
 
   for (const arch of ["U", "L"] as const) {
-    if (g.edentulous.has(arch)) lines.push({ codes: [archCode("E", arch)], text: `${ARCH_LABEL[arch]} · 이가 거의 없음` });
+    if (g.edentulous.has(arch)) lines.push({ codes: [archCode("E", arch)], text: `${ARCH_LABEL[arch]} · 치아가 거의 없음` });
   }
   for (const zone of ZONE_ORDER) {
     const teeth = g.teethByZone.get(zone);

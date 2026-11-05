@@ -75,7 +75,7 @@ export function WizardStep({
           {title}
         </h1>
         {description && !compact && (
-          <p className="mt-3 text-base text-muted-foreground md:text-lg">
+          <p className="mt-3 break-keep text-base text-muted-foreground md:text-lg">
             {description}
           </p>
         )}
